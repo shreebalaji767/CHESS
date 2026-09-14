@@ -1,87 +1,265 @@
+```css
+/* =========================================================
+   CHESS MASTER — REALISTIC CHESS UI
+   ========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
+:root {
+    --background: #171512;
+    --background-2: #211e1b;
+
+    --panel: #262522;
+    --panel-light: #312e2b;
+
+    --border: #403d39;
+
+    --text: #f1f1f1;
+    --muted: #aaa7a2;
+
+    --green: #629924;
+    --green-dark: #4b781c;
+
+    --wood-light: #f0d9b5;
+    --wood-dark: #b58863;
+
+    --gold: #d6a84f;
+
+    --danger: #b94a48;
+
+    --shadow:
+        0 12px 35px rgba(0, 0, 0, 0.45);
+
+    --board-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     margin: 0;
-    background: #0b1220;
-    color: #e5e7eb;
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #302c27 0%,
+            #171512 45%,
+            #100f0d 100%
+        );
+
+    color: var(--text);
+
     font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
         Arial,
-        Helvetica,
         sans-serif;
 }
 
 
-/* HEADER */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .header {
+    min-height: 76px;
+
     display: flex;
-    justify-content: space-between;
+
     align-items: center;
 
-    padding: 20px 5%;
+    justify-content: space-between;
 
-    background: #111827;
+    padding: 14px 4%;
 
-    border-bottom: 1px solid #263248;
+    background:
+        linear-gradient(
+            180deg,
+            #292724,
+            #211f1c
+        );
+
+    border-bottom:
+        1px solid #45413c;
+
+    box-shadow:
+        0 3px 18px rgba(0, 0, 0, 0.35);
+
+    position: relative;
+
+    z-index: 20;
 }
 
 .header h1 {
     margin: 0;
-    font-size: 28px;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: 27px;
+
+    letter-spacing: 0.3px;
+
+    color: #f5f1e8;
+
+    text-shadow:
+        0 2px 2px rgba(0, 0, 0, 0.5);
 }
 
 .header p {
-    margin: 5px 0 0;
+    margin: 3px 0 0;
 
-    color: #94a3b8;
+    color: #aaa59e;
+
+    font-size: 13px;
+
+    letter-spacing: 0.4px;
 }
 
 
-/* NAVIGATION */
+/* =========================================================
+   INSTALL BUTTON
+   ========================================================= */
 
-.navigation {
-    display: flex;
-    gap: 8px;
+.install-button {
+    border: 1px solid #789d43;
 
-    padding: 12px 5%;
-
-    background: #0f172a;
-
-    position: sticky;
-    top: 0;
-
-    z-index: 100;
-}
-
-.nav-button {
-    border: 0;
-
-    padding: 11px 16px;
-
-    border-radius: 9px;
-
-    background: #1e293b;
+    background:
+        linear-gradient(
+            180deg,
+            #729f32,
+            #527d20
+        );
 
     color: white;
 
+    padding: 10px 16px;
+
+    border-radius: 7px;
+
     cursor: pointer;
 
-    font-weight: bold;
+    font-weight: 700;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        0 3px 8px rgba(0,0,0,0.35);
+
+    transition:
+        transform 0.15s ease,
+        filter 0.15s ease;
+}
+
+.install-button:hover {
+    filter: brightness(1.1);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.navigation {
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 9px 4%;
+
+    background:
+        #1d1b19;
+
+    border-bottom:
+        1px solid #393632;
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 15;
+
+    box-shadow:
+        0 3px 12px rgba(0,0,0,0.25);
+}
+
+.nav-button {
+    position: relative;
+
+    border: 0;
+
+    padding: 10px 18px;
+
+    border-radius: 6px;
+
+    background: transparent;
+
+    color: #aaa7a2;
+
+    cursor: pointer;
+
+    font-weight: 700;
+
+    font-size: 14px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.nav-button:hover {
+    background: #302e2b;
+
+    color: white;
 }
 
 .nav-button.active {
-    background: #2563eb;
+    background: #3a3835;
+
+    color: white;
+}
+
+.nav-button.active::after {
+    content: "";
+
+    position: absolute;
+
+    left: 18px;
+
+    right: 18px;
+
+    bottom: -9px;
+
+    height: 3px;
+
+    background: #81b64c;
+
+    border-radius: 3px;
 }
 
 
-/* SECTIONS */
+/* =========================================================
+   SECTIONS
+   ========================================================= */
 
 .section {
     display: none;
 
-    padding: 30px 5%;
+    padding: 30px 4% 50px;
 }
 
 .section.active {
@@ -89,37 +267,56 @@ body {
 }
 
 
-/* GAME */
+/* =========================================================
+   GAME AREA
+   ========================================================= */
 
 .game-layout {
-    max-width: 1200px;
+    width: min(1450px, 100%);
 
-    margin: auto;
+    margin: 0 auto;
 
     display: grid;
 
     grid-template-columns:
-        minmax(300px, 700px)
-        300px;
+        minmax(520px, 760px)
+        minmax(300px, 380px);
 
-    gap: 20px;
+    justify-content: center;
+
+    gap: 28px;
+
+    align-items: start;
 }
 
 
-.game-card,
-.card {
-    background: #111827;
+/* =========================================================
+   GAME CARD
+   ========================================================= */
 
-    border: 1px solid #263248;
+.game-card {
+    background:
+        linear-gradient(
+            145deg,
+            #292724,
+            #201f1c
+        );
 
-    border-radius: 16px;
+    border:
+        1px solid #403d38;
 
-    padding: 20px;
+    border-radius: 10px;
+
+    padding: 16px;
 
     box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.25);
+        var(--shadow);
 }
 
+
+/* =========================================================
+   GAME HEADER
+   ========================================================= */
 
 .game-header {
     display: flex;
@@ -128,37 +325,66 @@ body {
 
     align-items: center;
 
-    margin-bottom: 15px;
+    min-height: 55px;
+
+    margin-bottom: 10px;
+
+    padding: 0 5px;
+}
+
+.game-header strong {
+    display: block;
+
+    font-size: 16px;
+
+    color: #f3f3f3;
 }
 
 .game-header small {
     display: block;
 
-    color: #94a3b8;
+    margin-top: 3px;
 
-    margin-top: 4px;
+    color: #989590;
+
+    font-size: 12px;
 }
-
 
 #difficulty {
-    background: #0f172a;
+    appearance: none;
 
-    color: white;
+    min-width: 145px;
 
-    border: 1px solid #334155;
+    padding: 10px 34px 10px 12px;
 
-    padding: 9px;
+    border:
+        1px solid #4b4843;
 
-    border-radius: 8px;
+    border-radius: 6px;
+
+    background:
+        #302e2b;
+
+    color: #eee;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    outline: none;
+}
+
+#difficulty:focus {
+    border-color: #81b64c;
 }
 
 
-/* BOARD */
+/* =========================================================
+   PLAYER-STYLE BOARD FRAME
+   ========================================================= */
 
 .chess-board {
-    width: 100%;
-
-    max-width: 680px;
+    width: min(100%, 720px);
 
     aspect-ratio: 1;
 
@@ -172,103 +398,342 @@ body {
     overflow: hidden;
 
     border:
-        4px solid #334155;
+        8px solid #171614;
 
-    border-radius: 10px;
+    border-radius: 3px;
+
+    box-shadow:
+        var(--board-shadow),
+        0 0 0 1px #504a42;
+
+    background: #171614;
 }
 
 
-.square {
-    display: flex;
+/* =========================================================
+   CHESS SQUARES
+   ========================================================= */
 
-    justify-content: center;
+.square {
+    position: relative;
+
+    display: flex;
 
     align-items: center;
 
-    font-size: clamp(30px, 7vw, 65px);
-
-    cursor: pointer;
+    justify-content: center;
 
     user-select: none;
 
-    position: relative;
+    cursor: pointer;
+
+    aspect-ratio: 1;
+
+    font-family:
+        "DejaVu Sans",
+        "Segoe UI Symbol",
+        "Noto Sans Symbols 2",
+        serif;
+
+    font-size:
+        clamp(
+            34px,
+            7vw,
+            70px
+        );
+
+    line-height: 1;
+
+    transition:
+        filter 0.08s ease;
 }
 
+
+/* Light wooden square */
 
 .light-square {
-    background: #f0d9b5;
+    background:
+        linear-gradient(
+            135deg,
+            #f2d9b5 0%,
+            #e8c89d 50%,
+            #e1bd90 100%
+        );
+
+    color: #fff;
 }
+
+
+/* Dark wooden square */
 
 .dark-square {
-    background: #b58863;
+    background:
+        linear-gradient(
+            135deg,
+            #c49563 0%,
+            #b17f4e 50%,
+            #a87343 100%
+        );
+
+    color: #fff;
 }
 
+
+/* Slight wooden texture */
+
+.light-square::before,
+.dark-square::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    opacity: 0.09;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent 3px,
+            rgba(80, 50, 20, 0.15) 4px,
+            transparent 6px
+        );
+}
+
+
+/* =========================================================
+   REALISTIC CHESS PIECES
+   ========================================================= */
+
+.square {
+    text-shadow:
+        0 2px 1px rgba(0,0,0,0.85),
+        0 4px 7px rgba(0,0,0,0.45);
+}
+
+.light-square .piece,
+.dark-square .piece {
+    filter:
+        drop-shadow(
+            0 4px 3px rgba(0,0,0,0.45)
+        );
+}
+
+
+/* White piece appearance */
+
+.square:not(.dark-square) {
+    color: #fff;
+}
+
+
+/* Black pieces */
+
+.square {
+    -webkit-font-smoothing: antialiased;
+}
+
+
+/* =========================================================
+   SELECTED SQUARE
+   ========================================================= */
 
 .selected {
     outline:
-        4px solid #facc15;
+        4px solid rgba(255, 214, 67, 0.9);
 
     outline-offset: -4px;
+
+    z-index: 2;
+
+    box-shadow:
+        inset 0 0 0 999px
+        rgba(255, 211, 62, 0.15);
 }
 
+
+/* =========================================================
+   LEGAL MOVE INDICATOR
+   ========================================================= */
 
 .legal-move::after {
     content: "";
 
-    width: 20%;
-    height: 20%;
+    position: absolute;
+
+    width: 23%;
+
+    height: 23%;
 
     border-radius: 50%;
 
-    background: rgba(0, 0, 0, 0.35);
+    background:
+        rgba(40, 40, 40, 0.32);
 
-    position: absolute;
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.35);
+
+    z-index: 5;
 }
 
 
-/* BUTTONS */
+/* Capture indicator */
+
+.legal-move:has(+ *) {
+}
+
+
+/* =========================================================
+   BOARD HOVER
+   ========================================================= */
+
+.square:hover {
+    filter: brightness(1.06);
+}
+
+
+/* =========================================================
+   CONTROLS
+   ========================================================= */
 
 .game-controls {
     display: flex;
 
     justify-content: center;
 
-    gap: 10px;
+    gap: 9px;
 
     margin-top: 15px;
+
+    padding-top: 13px;
+
+    border-top:
+        1px solid #3b3935;
 }
 
-button {
-    font-family: inherit;
-}
+.game-controls button {
+    border:
+        1px solid #55514b;
 
-.game-controls button,
-.install-button {
-    border: 0;
+    padding: 10px 18px;
 
-    padding: 10px 16px;
+    border-radius: 6px;
 
-    border-radius: 9px;
+    background:
+        linear-gradient(
+            180deg,
+            #45423e,
+            #35332f
+        );
 
-    background: #2563eb;
-
-    color: white;
-
-    font-weight: bold;
+    color: #f3f3f3;
 
     cursor: pointer;
+
+    font-weight: 700;
+
+    font-size: 13px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 2px 4px rgba(0,0,0,0.3);
+
+    transition:
+        transform 0.12s ease,
+        filter 0.12s ease;
 }
+
+.game-controls button:hover {
+    filter: brightness(1.15);
+
+    transform: translateY(-1px);
+}
+
+.game-controls button:active {
+    transform: translateY(1px);
+}
+
+
+/* Secondary */
 
 .secondary {
-    background: #334155 !important;
+    background:
+        linear-gradient(
+            180deg,
+            #45423e,
+            #35332f
+        ) !important;
 }
+
+
+/* Danger */
 
 .danger {
-    background: #dc2626 !important;
+    background:
+        linear-gradient(
+            180deg,
+            #b94b49,
+            #8d3533
+        ) !important;
+
+    border-color:
+        #c45d59 !important;
 }
 
 
-/* STATISTICS */
+/* =========================================================
+   RIGHT SIDE CARDS
+   ========================================================= */
+
+.game-layout > aside {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+
+.card {
+    background:
+        linear-gradient(
+            145deg,
+            #292724,
+            #211f1c
+        );
+
+    border:
+        1px solid #403d38;
+
+    border-radius: 10px;
+
+    padding: 18px;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.35);
+}
+
+.card h2 {
+    margin:
+        0 0 15px;
+
+    font-size: 17px;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    color: #f0ede7;
+}
+
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
 
 .statistics {
     display: grid;
@@ -276,150 +741,501 @@ button {
     grid-template-columns:
         1fr 1fr;
 
-    gap: 10px;
+    gap: 8px;
 }
 
 .statistics div {
-    background: #0f172a;
+    padding: 13px;
 
-    padding: 12px;
+    border:
+        1px solid #3a3834;
 
-    border-radius: 9px;
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #302e2b,
+            #292724
+        );
+
+    text-align: center;
 }
 
 .statistics span {
     display: block;
 
-    color: #94a3b8;
+    margin-bottom: 5px;
 
-    font-size: 12px;
+    color: #9f9b95;
+
+    font-size: 11px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.6px;
+}
+
+.statistics b {
+    font-size: 21px;
+
+    color: #f3f3f3;
 }
 
 
-/* MOVES */
+/* =========================================================
+   MOVE HISTORY
+   ========================================================= */
 
 .move-history {
-    max-height: 400px;
+    max-height: 430px;
 
     overflow-y: auto;
 
-    line-height: 1.8;
+    padding: 8px;
+
+    border:
+        1px solid #3a3834;
+
+    border-radius: 7px;
+
+    background:
+        #1c1b19;
+
+    color: #d8d5cf;
+
+    line-height: 1.9;
+
+    font-family:
+        "Courier New",
+        monospace;
+
+    font-size: 13px;
+}
+
+.move-history::-webkit-scrollbar {
+    width: 7px;
+}
+
+.move-history::-webkit-scrollbar-track {
+    background: #1c1b19;
+}
+
+.move-history::-webkit-scrollbar-thumb {
+    background: #4b4843;
+
+    border-radius: 10px;
 }
 
 
-/* ACADEMY */
+/* =========================================================
+   ACADEMY
+   ========================================================= */
+
+.academy {
+    max-width: 1250px;
+
+    margin: auto;
+}
+
+.academy > h2 {
+    font-size: 26px;
+
+    margin-bottom: 5px;
+}
+
+.academy > p {
+    color: var(--muted);
+}
+
 
 .lesson-grid {
     display: grid;
 
     grid-template-columns:
-        repeat(auto-fit, minmax(230px, 1fr));
+        repeat(
+            auto-fit,
+            minmax(240px, 1fr)
+        );
 
     gap: 15px;
 
-    margin-top: 20px;
+    margin-top: 24px;
 }
 
 
 .lesson {
-    background: #0f172a;
+    position: relative;
 
-    border: 1px solid #263248;
-
-    border-radius: 12px;
-
-    padding: 16px;
-}
-
-.lesson.completed {
-    border-color: #22c55e;
-}
-
-.lesson h3 {
-    margin-top: 0;
-}
-
-.lesson button {
-    border: 0;
-
-    padding: 9px 12px;
-
-    border-radius: 8px;
-
-    background: #2563eb;
-
-    color: white;
-
-    cursor: pointer;
-}
-
-
-/* PUZZLE */
-
-.puzzle-box {
-    max-width: 600px;
+    min-height: 175px;
 
     padding: 20px;
 
-    border-radius: 12px;
+    background:
+        linear-gradient(
+            145deg,
+            #302e2b,
+            #252321
+        );
 
-    background: #0f172a;
+    border:
+        1px solid #403d38;
+
+    border-radius: 9px;
+
+    box-shadow:
+        0 6px 18px rgba(0,0,0,0.25);
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease;
 }
 
-.puzzle-box button {
-    border: 0;
+.lesson:hover {
+    transform: translateY(-3px);
 
-    padding: 10px 15px;
+    border-color:
+        #65605a;
+}
 
-    border-radius: 8px;
+.lesson.completed {
+    border-color:
+        #6f9d3d;
 
-    background: #16a34a;
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(111,157,61,0.25);
+}
+
+.lesson h3 {
+    margin:
+        0 0 10px;
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-size: 17px;
+}
+
+.lesson p {
+    color: #aaa7a2;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+}
+
+.lesson button {
+    border:
+        1px solid #637d42;
+
+    padding: 9px 13px;
+
+    border-radius: 6px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #6f9d3b,
+            #527d25
+        );
 
     color: white;
 
     cursor: pointer;
+
+    font-weight: 700;
+
+    font-size: 12px;
 }
 
 
-/* MOBILE */
+/* =========================================================
+   PUZZLES
+   ========================================================= */
 
-@media(max-width: 850px) {
+.puzzle-box {
+    max-width: 700px;
+
+    margin-top: 20px;
+
+    padding: 24px;
+
+    border:
+        1px solid #403d38;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #302e2b,
+            #242220
+        );
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.3);
+}
+
+.puzzle-box h3 {
+    font-family:
+        Georgia,
+        serif;
+
+    font-size: 20px;
+}
+
+.puzzle-box p,
+.puzzle-box li {
+    color: #b7b3ad;
+
+    line-height: 1.7;
+}
+
+.puzzle-box button {
+    border:
+        1px solid #668d38;
+
+    padding: 10px 16px;
+
+    border-radius: 6px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #70a13b,
+            #527d24
+        );
+
+    color: white;
+
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   FOCUS STATES
+   ========================================================= */
+
+button:focus-visible,
+select:focus-visible {
+    outline:
+        2px solid #9bc768;
+
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+    background: #81b64c;
+
+    color: white;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1050px) {
+
+    .game-layout {
+        grid-template-columns:
+            minmax(450px, 680px)
+            280px;
+
+        gap: 18px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 850px) {
 
     .game-layout {
         grid-template-columns: 1fr;
+
+        max-width: 720px;
+    }
+
+    .game-layout > aside {
+        display: grid;
+
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .move-history {
+        max-height: 250px;
     }
 
 }
 
 
-@media(max-width: 600px) {
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
 
     .header {
-        padding: 15px;
+        padding: 12px 14px;
     }
 
     .header h1 {
-        font-size: 22px;
+        font-size: 21px;
     }
+
+    .header p {
+        font-size: 11px;
+    }
+
+    .install-button {
+        padding: 8px 10px;
+
+        font-size: 11px;
+    }
+
 
     .navigation {
+        padding: 7px 10px;
+
         overflow-x: auto;
+
+        scrollbar-width: none;
     }
+
+    .navigation::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-button {
+        white-space: nowrap;
+
+        padding:
+            9px 13px;
+
+        font-size: 12px;
+    }
+
 
     .section {
-        padding: 15px 10px;
+        padding:
+            14px 8px 30px;
     }
 
+
     .game-card {
-        padding: 10px;
+        padding: 8px;
+
+        border-radius: 8px;
     }
+
+
+    .game-header {
+        padding:
+            0 3px;
+
+        margin-bottom: 7px;
+    }
+
+
+    #difficulty {
+        min-width: 120px;
+
+        padding: 8px;
+    }
+
+
+    .chess-board {
+        border-width: 5px;
+
+        border-radius: 2px;
+    }
+
+
+    .square {
+        font-size:
+            11vw;
+    }
+
 
     .game-controls {
         flex-wrap: wrap;
+
+        padding-top: 10px;
     }
 
-    .square {
-        font-size: 11vw;
+
+    .game-controls button {
+        flex:
+            1 1 auto;
+
+        min-width: 90px;
+
+        padding: 9px 10px;
+
+        font-size: 12px;
+    }
+
+
+    .game-layout > aside {
+        display: grid;
+
+        grid-template-columns: 1fr;
+    }
+
+
+    .statistics {
+        grid-template-columns:
+            repeat(4, 1fr);
+    }
+
+
+    .statistics div {
+        padding: 9px 4px;
+    }
+
+
+    .statistics span {
+        font-size: 9px;
+    }
+
+
+    .statistics b {
+        font-size: 17px;
+    }
+
+
+    .lesson-grid {
+        grid-template-columns:
+            1fr;
     }
 
 }
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .statistics {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+}
+```
