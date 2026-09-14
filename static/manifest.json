@@ -1,10 +1,11 @@
 {
-    "name": "Chess Master",
-    "short_name": "Chess Master",
-    "description": "Play chess, solve puzzles and learn chess.",
+    "name": "Chess Academy",
+    "short_name": "Chess Academy",
+    "description": "Play chess against the computer and learn chess from beginner to master.",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#171512",
-    "theme_color": "#171512",
-    "orientation": "portrait-primary"
+    "background_color": "#262522",
+    "theme_color": "#312e2b",
+    "orientation": "portrait-primary",
+    "icons": []
 }
