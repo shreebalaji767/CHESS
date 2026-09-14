@@ -1,10 +1,10 @@
 {
     "name": "Chess Master",
     "short_name": "Chess Master",
+    "description": "Play chess, solve puzzles and learn chess.",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0b1220",
-    "theme_color": "#111827",
-    "description": "Play chess against the computer and learn chess from zero to master.",
-    "icons": []
+    "background_color": "#171512",
+    "theme_color": "#171512",
+    "orientation": "portrait-primary"
 }
