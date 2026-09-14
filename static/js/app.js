@@ -1,77 +1,102 @@
-/* =========================================================
-   CHESS ACADEMY - MAIN APP
-   Works with the supplied ChessGame engine.
-========================================================= */
+/* ============================================================
+   CHESS APPLICATION
+   Main application controller
+   Works with the supplied chess.js engine
+============================================================ */
+
+"use strict";
+
 
 const App = {
+
+    /* ========================================================
+       STATE
+    ======================================================== */
 
     currentSection: "home",
 
     gameStarted: false,
 
-    boardFlipped: false,
+    difficulty: 3,
 
-    selectedSquare: null,
+    playerColor: "w",
 
-    highlightedMoves: [],
+    computerColor: "b",
+
+    timerInterval: null,
+
+    playerTime: 600,
+
+    computerTime: 600,
 
     lastMove: null,
 
-    capturedWhite: [],
-    capturedBlack: [],
+    moveHistoryDisplay: [],
 
-    playerClockSeconds: 10 * 60,
-    computerClockSeconds: 10 * 60,
+    capturedByPlayer: [],
 
-    playerClockTimer: null,
-    computerClockTimer: null,
+    capturedByComputer: [],
 
-    gameResultRecorded: false,
+    deferredInstallPrompt: null,
 
-    difficulty: 2,
+    stats: {
+        games: 0,
+        wins: 0,
+        losses: 0,
+        draws: 0
+    },
 
 
-    /* =====================================================
+    /* ========================================================
        INITIALIZATION
-    ===================================================== */
+    ======================================================== */
 
     init() {
 
         this.bindNavigation();
+
         this.bindHomeButtons();
+
         this.bindGameControls();
+
         this.bindBoard();
+
         this.bindPWA();
 
         this.loadStats();
 
         this.showSection("home");
 
-        this.updateStatistics();
-
-        console.log("Chess Academy loaded successfully.");
-
+        /*
+         * IMPORTANT:
+         * Do NOT start a game automatically.
+         *
+         * The board is prepared only when the user
+         * enters PLAY GAME.
+         */
     },
 
 
-    /* =====================================================
+    /* ========================================================
        NAVIGATION
-    ===================================================== */
+    ======================================================== */
 
     bindNavigation() {
 
-        document.querySelectorAll(".nav-button").forEach(button => {
+        const navigationButtons =
+            document.querySelectorAll(
+                ".nav-button[data-section]"
+            );
+
+
+        navigationButtons.forEach(button => {
 
             button.addEventListener("click", () => {
 
                 const section =
                     button.dataset.section;
 
-                if (section) {
-
-                    this.showSection(section);
-
-                }
+                this.showSection(section);
 
             });
 
@@ -80,6 +105,7 @@ const App = {
 
         const logo =
             document.getElementById("homeLogo");
+
 
         if (logo) {
 
@@ -91,74 +117,87 @@ const App = {
 
         }
 
-
-        const gameHome =
-            document.getElementById("gameHome");
-
-        if (gameHome) {
-
-            gameHome.addEventListener("click", () => {
-
-                this.showSection("home");
-
-            });
-
-        }
-
-
-        const academyHome =
-            document.getElementById("academyHome");
-
-        if (academyHome) {
-
-            academyHome.addEventListener("click", () => {
-
-                this.showSection("home");
-
-            });
-
-        }
-
     },
 
 
-    showSection(section) {
+    showSection(sectionName) {
 
-        const sections = [
-            "home",
-            "play",
-            "academy",
-            "exit"
-        ];
+        const sections =
+            document.querySelectorAll(".section");
 
-        sections.forEach(id => {
 
-            const element =
-                document.getElementById(id);
+        sections.forEach(section => {
 
-            if (!element) {
-                return;
+            section.classList.remove("active");
+
+        });
+
+
+        const target =
+            document.getElementById(sectionName);
+
+
+        if (target) {
+
+            target.classList.add("active");
+
+        }
+
+
+        const navButtons =
+            document.querySelectorAll(
+                ".nav-button[data-section]"
+            );
+
+
+        navButtons.forEach(button => {
+
+            button.classList.remove("active");
+
+
+            if (
+                button.dataset.section ===
+                sectionName
+            ) {
+
+                button.classList.add("active");
+
             }
 
-            element.classList.toggle(
-                "active",
-                id === section
-            );
-
         });
 
 
-        document.querySelectorAll(".nav-button").forEach(button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.section === section
-            );
-
-        });
+        this.currentSection =
+            sectionName;
 
 
-        this.currentSection = section;
+        /*
+         * When PLAY GAME is entered:
+         *
+         * SHOW THE CHESS BOARD.
+         *
+         * But DO NOT START THE GAME.
+         */
+
+        if (sectionName === "play") {
+
+            this.prepareGameScreen();
+
+        }
+
+
+        /*
+         * Stop any clock when leaving the game.
+         */
+
+        if (
+            sectionName !== "play"
+        ) {
+
+            this.stopClock();
+
+        }
+
 
         window.scrollTo({
             top: 0,
@@ -168,482 +207,1116 @@ const App = {
     },
 
 
-    /* =====================================================
-       HOME
-    ===================================================== */
+    /* ========================================================
+       HOME BUTTONS
+    ======================================================== */
 
     bindHomeButtons() {
 
-        const playButton =
-            document.getElementById("homePlayGame");
-
-        if (playButton) {
-
-            playButton.addEventListener("click", () => {
-
-                this.showSection("play");
-
-            });
-
-        }
+        const homePlayGame =
+            document.getElementById(
+                "homePlayGame"
+            );
 
 
-        const academyButton =
-            document.getElementById("homeAcademy");
+        if (homePlayGame) {
 
-        if (academyButton) {
+            homePlayGame.addEventListener(
+                "click",
+                () => {
 
-            academyButton.addEventListener("click", () => {
+                    this.showSection("play");
 
-                this.showSection("academy");
-
-            });
+                }
+            );
 
         }
 
 
-        const exitButton =
-            document.getElementById("homeExit");
+        const homeAcademy =
+            document.getElementById(
+                "homeAcademy"
+            );
 
-        if (exitButton) {
 
-            exitButton.addEventListener("click", () => {
+        if (homeAcademy) {
 
-                this.stopClock();
+            homeAcademy.addEventListener(
+                "click",
+                () => {
 
-                this.showSection("exit");
+                    this.showSection("academy");
 
-            });
+                }
+            );
+
+        }
+
+
+        const homeExit =
+            document.getElementById(
+                "homeExit"
+            );
+
+
+        if (homeExit) {
+
+            homeExit.addEventListener(
+                "click",
+                () => {
+
+                    this.showSection("exit");
+
+                }
+            );
+
+        }
+
+
+        const gameHome =
+            document.getElementById(
+                "gameHome"
+            );
+
+
+        if (gameHome) {
+
+            gameHome.addEventListener(
+                "click",
+                () => {
+
+                    this.showSection("home");
+
+                }
+            );
+
+        }
+
+
+        const academyHome =
+            document.getElementById(
+                "academyHome"
+            );
+
+
+        if (academyHome) {
+
+            academyHome.addEventListener(
+                "click",
+                () => {
+
+                    this.showSection("home");
+
+                }
+            );
 
         }
 
 
         const returnHome =
-            document.getElementById("returnHome");
+            document.getElementById(
+                "returnHome"
+            );
+
 
         if (returnHome) {
 
-            returnHome.addEventListener("click", () => {
+            returnHome.addEventListener(
+                "click",
+                () => {
 
-                this.showSection("home");
+                    this.showSection("home");
 
-            });
+                }
+            );
 
         }
 
     },
 
 
-    /* =====================================================
+    /* ========================================================
+       GAME SCREEN PREVIEW
+    ======================================================== */
+
+    prepareGameScreen() {
+
+        /*
+         * If a real game is already running,
+         * don't destroy it just because the user
+         * clicked PLAY GAME again.
+         */
+
+        if (this.gameStarted) {
+
+            this.renderBoard();
+
+            return;
+
+        }
+
+
+        /*
+         * Prepare a fresh starting board.
+         *
+         * This DOES NOT start the game.
+         */
+
+        const playerColorElement =
+            document.getElementById(
+                "playerColor"
+            );
+
+
+        const selectedColor =
+            playerColorElement
+                ? playerColorElement.value
+                : "w";
+
+
+        this.playerColor =
+            selectedColor === "b"
+                ? "b"
+                : "w";
+
+
+        this.computerColor =
+            this.playerColor === "w"
+                ? "b"
+                : "w";
+
+
+        /*
+         * Initialize the chess engine only
+         * so that the starting position can
+         * be displayed.
+         */
+
+        ChessGame.init(
+            this.playerColor
+        );
+
+
+        /*
+         * IMPORTANT:
+         *
+         * gameStarted remains FALSE.
+         *
+         * Therefore the board cannot be played.
+         */
+
+        this.gameStarted = false;
+
+        this.lastMove = null;
+
+        this.capturedByPlayer = [];
+
+        this.capturedByComputer = [];
+
+        this.moveHistoryDisplay = [];
+
+
+        this.resetClockDisplay();
+
+        this.clearCapturedPieces();
+
+        this.renderBoard();
+
+        this.renderMoveHistory();
+
+        this.updateMaterial();
+
+        this.updateMoveCount();
+
+        this.updateGameStatus(
+            "Choose your settings and click NEW GAME."
+        );
+
+
+        this.showBoardOverlay(true);
+
+    },
+
+
+    /* ========================================================
        GAME CONTROLS
-    ===================================================== */
+    ======================================================== */
 
     bindGameControls() {
 
-        const startButton =
-            document.getElementById("startGame");
+        const startGame =
+            document.getElementById(
+                "startGame"
+            );
 
-        if (startButton) {
 
-            startButton.addEventListener("click", () => {
+        if (startGame) {
 
-                this.startNewGame();
+            startGame.addEventListener(
+                "click",
+                () => {
 
-            });
+                    this.startNewGame();
+
+                }
+            );
 
         }
 
 
         const newGame =
-            document.getElementById("newGame");
+            document.getElementById(
+                "newGame"
+            );
+
 
         if (newGame) {
 
-            newGame.addEventListener("click", () => {
-
-                this.startNewGame();
-
-            });
-
-        }
-
-
-        const undoButton =
-            document.getElementById("undoMove");
-
-        if (undoButton) {
-
-            undoButton.addEventListener("click", () => {
-
-                this.undoMove();
-
-            });
-
-        }
-
-
-        const resignButton =
-            document.getElementById("resignGame");
-
-        if (resignButton) {
-
-            resignButton.addEventListener("click", () => {
-
-                this.resignGame();
-
-            });
-
-        }
-
-
-        const playerColor =
-            document.getElementById("playerColor");
-
-        if (playerColor) {
-
-            playerColor.addEventListener("change", () => {
-
-                if (this.gameStarted) {
+            newGame.addEventListener(
+                "click",
+                () => {
 
                     this.startNewGame();
 
                 }
-
-            });
+            );
 
         }
 
 
-        const difficulty =
-            document.getElementById("difficulty");
+        const undo =
+            document.getElementById(
+                "undoMove"
+            );
 
-        if (difficulty) {
 
-            difficulty.addEventListener("change", () => {
+        if (undo) {
 
-                this.difficulty =
-                    Number(difficulty.value);
+            undo.addEventListener(
+                "click",
+                () => {
 
-            });
+                    this.undoMove();
+
+                }
+            );
+
+        }
+
+
+        const resign =
+            document.getElementById(
+                "resignGame"
+            );
+
+
+        if (resign) {
+
+            resign.addEventListener(
+                "click",
+                () => {
+
+                    this.resignGame();
+
+                }
+            );
 
         }
 
     },
 
 
-    /* =====================================================
+    /* ========================================================
        START NEW GAME
-    ===================================================== */
+    ======================================================== */
 
     startNewGame() {
 
-        const colorElement =
-            document.getElementById("playerColor");
+        const playerColorElement =
+            document.getElementById(
+                "playerColor"
+            );
+
 
         const difficultyElement =
-            document.getElementById("difficulty");
+            document.getElementById(
+                "difficulty"
+            );
 
 
-        const playerColor =
-            colorElement
-                ? colorElement.value
+        this.playerColor =
+            playerColorElement
+                ? playerColorElement.value
                 : "w";
 
 
         this.difficulty =
             difficultyElement
-                ? Number(difficultyElement.value)
-                : 2;
+                ? Number(
+                    difficultyElement.value
+                )
+                : 3;
 
 
-        console.log(
-            "Starting game. Player:",
-            playerColor,
-            "Difficulty:",
-            this.difficulty
-        );
+        if (
+            this.playerColor !== "w" &&
+            this.playerColor !== "b"
+        ) {
+
+            this.playerColor = "w";
+
+        }
+
+
+        this.computerColor =
+            this.playerColor === "w"
+                ? "b"
+                : "w";
 
 
         /*
-         * Initialize the REAL chess engine.
+         * Initialize actual chess game.
          */
 
-        ChessGame.init(playerColor);
+        ChessGame.init(
+            this.playerColor
+        );
 
 
         this.gameStarted = true;
 
-        this.gameResultRecorded = false;
-
-        this.selectedSquare = null;
-
-        this.highlightedMoves = [];
-
         this.lastMove = null;
 
-        this.capturedWhite = [];
+        this.moveHistoryDisplay = [];
 
-        this.capturedBlack = [];
+        this.capturedByPlayer = [];
 
-
-        /*
-         * Reset clocks.
-         */
-
-        this.playerClockSeconds =
-            10 * 60;
-
-        this.computerClockSeconds =
-            10 * 60;
+        this.capturedByComputer = [];
 
 
-        this.stopClock();
+        this.playerTime = 600;
+
+        this.computerTime = 600;
 
 
-        /*
-         * Player orientation.
-         */
+        this.clearCapturedPieces();
 
-        this.boardFlipped =
-            playerColor === "b";
-
-
-        /*
-         * Clear move list.
-         */
-
-        this.clearMoveHistory();
-
-
-        /*
-         * Update labels.
-         */
-
-        this.updatePlayerLabels();
-
-
-        /*
-         * Render the actual board.
-         */
+        this.resetClockDisplay();
 
         this.renderBoard();
 
-        this.updateClocks();
-
-        this.updateCapturedPieces();
+        this.renderMoveHistory();
 
         this.updateMaterial();
 
-        this.updateGameStatus();
-
         this.updateMoveCount();
+
+        this.updateGameStatus(
+            this.playerColor === "w"
+                ? "Your turn — White to move."
+                : "Computer is thinking..."
+        );
+
+
+        this.showBoardOverlay(false);
+
+
+        this.startClockForCurrentTurn();
 
 
         /*
-         * Start player's clock if White.
-         * If player is Black, computer moves first.
+         * If user selected BLACK,
+         * computer must move first.
          */
 
-        if (ChessGame.turn === playerColor) {
-
-            this.startPlayerClock();
-
-        } else {
-
-            this.startComputerClock();
+        if (
+            this.playerColor === "b"
+        ) {
 
             setTimeout(() => {
 
-                if (
-                    this.gameStarted &&
-                    !ChessGame.gameOver &&
-                    ChessGame.turn === ChessGame.computerColor
-                ) {
-
-                    this.computerMove();
-
-                }
+                this.computerMove();
 
             }, 500);
 
         }
 
+    },
 
-        console.log(
-            "BOARD:",
-            ChessGame.board
+
+    /* ========================================================
+       BOARD
+    ======================================================== */
+
+    bindBoard() {
+
+        const board =
+            document.getElementById(
+                "chessBoard"
+            );
+
+
+        if (!board) {
+
+            return;
+
+        }
+
+
+        board.addEventListener(
+            "click",
+            (event) => {
+
+                const square =
+                    event.target.closest(
+                        ".chess-square"
+                    );
+
+
+                if (!square) {
+
+                    return;
+
+                }
+
+
+                const row =
+                    Number(
+                        square.dataset.row
+                    );
+
+
+                const col =
+                    Number(
+                        square.dataset.col
+                    );
+
+
+                this.handleSquareClick(
+                    row,
+                    col
+                );
+
+            }
         );
 
     },
 
 
-    /* =====================================================
-       PLAYER LABELS
-    ===================================================== */
+    handleSquareClick(row, col) {
 
-    updatePlayerLabels() {
+        /*
+         * No moves before NEW GAME.
+         */
 
-        const playerLabel =
-            document.getElementById("playerLabel");
+        if (!this.gameStarted) {
 
-        const computerLabel =
-            document.getElementById("computerLabel");
-
-
-        if (!playerLabel || !computerLabel) {
             return;
+
+        }
+
+
+        /*
+         * No moves after game over.
+         */
+
+        if (ChessGame.gameOver) {
+
+            return;
+
         }
 
 
-        if (ChessGame.playerColor === "w") {
+        /*
+         * Only allow human player
+         * to move on their own turn.
+         */
 
-            playerLabel.textContent =
-                "You • White";
+        if (
+            ChessGame.turn !==
+            this.playerColor
+        ) {
 
-            computerLabel.textContent =
-                "Computer • Black";
-
-        } else {
-
-            playerLabel.textContent =
-                "You • Black";
-
-            computerLabel.textContent =
-                "Computer • White";
+            return;
 
         }
+
+
+        const piece =
+            ChessGame.board[row][col];
+
+
+        const pieceColor =
+            ChessGame.colorOf(piece);
+
+
+        /*
+         * If a piece is already selected,
+         * see if clicked square is a legal move.
+         */
+
+        if (
+            ChessGame.selected
+        ) {
+
+            const selected =
+                ChessGame.selected;
+
+
+            const legalMoves =
+                ChessGame.getMovesForSquare(
+                    selected.r,
+                    selected.c
+                );
+
+
+            const selectedMove =
+                legalMoves.find(
+                    move =>
+                        move.to.r === row &&
+                        move.to.c === col
+                );
+
+
+            if (selectedMove) {
+
+                this.performPlayerMove(
+                    selectedMove
+                );
+
+                return;
+
+            }
+
+        }
+
+
+        /*
+         * Select one of player's pieces.
+         */
+
+        if (
+            piece &&
+            pieceColor ===
+                this.playerColor
+        ) {
+
+            ChessGame.selected = {
+                r: row,
+                c: col
+            };
+
+
+            ChessGame.legalMoves =
+                ChessGame.getMovesForSquare(
+                    row,
+                    col
+                );
+
+
+            this.renderBoard();
+
+            return;
+
+        }
+
+
+        /*
+         * Clicking somewhere else
+         * clears selection.
+         */
+
+        ChessGame.selected = null;
+
+        ChessGame.legalMoves = [];
+
+        this.renderBoard();
 
     },
 
 
-    /* =====================================================
-       BOARD EVENTS
-    ===================================================== */
+    /* ========================================================
+       PLAYER MOVE
+    ======================================================== */
 
-    bindBoard() {
+    performPlayerMove(move) {
 
-        const board =
-            document.getElementById("chessBoard");
+        if (!this.gameStarted) {
 
-        if (!board) {
             return;
+
         }
 
 
-        board.addEventListener("click", event => {
+        const boardBefore =
+            ChessGame.cloneBoard(
+                ChessGame.board
+            );
 
-            const square =
-                event.target.closest(".chess-square");
 
-            if (!square) {
+        const capturedPiece =
+            this.getCapturedPieceForMove(
+                move
+            );
+
+
+        const success =
+            ChessGame.makeMove(move);
+
+
+        if (!success) {
+
+            this.renderBoard();
+
+            return;
+
+        }
+
+
+        this.lastMove = move;
+
+
+        this.recordMove(
+            move,
+            boardBefore,
+            this.playerColor,
+            capturedPiece
+        );
+
+
+        ChessGame.selected = null;
+
+        ChessGame.legalMoves = [];
+
+
+        this.renderBoard();
+
+        this.renderMoveHistory();
+
+        this.updateMaterial();
+
+        this.updateMoveCount();
+
+
+        if (
+            this.finishIfGameOver()
+        ) {
+
+            return;
+
+        }
+
+
+        this.updateGameStatus(
+            "Computer is thinking..."
+        );
+
+
+        this.startClockForCurrentTurn();
+
+
+        setTimeout(() => {
+
+            this.computerMove();
+
+        }, 350);
+
+    },
+
+
+    /* ========================================================
+       COMPUTER MOVE
+    ======================================================== */
+
+    computerMove() {
+
+        if (!this.gameStarted) {
+
+            return;
+
+        }
+
+
+        if (ChessGame.gameOver) {
+
+            return;
+
+        }
+
+
+        if (
+            ChessGame.turn !==
+            this.computerColor
+        ) {
+
+            return;
+
+        }
+
+
+        this.updateGameStatus(
+            "Computer is thinking..."
+        );
+
+
+        /*
+         * Give browser time to update UI.
+         */
+
+        setTimeout(() => {
+
+            const boardBefore =
+                ChessGame.cloneBoard(
+                    ChessGame.board
+                );
+
+
+            const bestMove =
+                ChessGame.findBestMove(
+                    this.difficulty
+                );
+
+
+            if (!bestMove) {
+
+                this.finishIfGameOver();
+
                 return;
+
             }
 
 
-            const row =
-                Number(square.dataset.row);
+            const capturedPiece =
+                this.getCapturedPieceForMove(
+                    bestMove
+                );
 
-            const col =
-                Number(square.dataset.col);
+
+            const success =
+                ChessGame.makeMove(
+                    bestMove
+                );
 
 
-            this.handleSquareClick(row, col);
+            if (!success) {
 
-        });
+                return;
+
+            }
+
+
+            this.lastMove =
+                bestMove;
+
+
+            this.recordMove(
+                bestMove,
+                boardBefore,
+                this.computerColor,
+                capturedPiece
+            );
+
+
+            ChessGame.selected = null;
+
+            ChessGame.legalMoves = [];
+
+
+            this.renderBoard();
+
+            this.renderMoveHistory();
+
+            this.updateMaterial();
+
+            this.updateMoveCount();
+
+
+            if (
+                this.finishIfGameOver()
+            ) {
+
+                return;
+
+            }
+
+
+            this.updateGameStatus(
+                "Your turn."
+            );
+
+
+            this.startClockForCurrentTurn();
+
+        }, 100);
 
     },
 
 
-    /* =====================================================
-       BOARD RENDERING
-    ===================================================== */
+    /* ========================================================
+       CAPTURED PIECE
+    ======================================================== */
 
-    renderBoard() {
-
-        const boardElement =
-            document.getElementById("chessBoard");
-
-        if (!boardElement) {
-            return;
-        }
-
-
-        boardElement.innerHTML = "";
-
+    getCapturedPieceForMove(move) {
 
         const board =
             ChessGame.board;
 
 
         /*
-         * Safety check.
+         * Normal capture.
          */
 
         if (
-            !board ||
-            !Array.isArray(board) ||
-            board.length !== 8
+            board[
+                move.to.r
+            ][
+                move.to.c
+            ]
         ) {
 
-            console.error(
-                "Chess board is invalid:",
-                board
+            return board[
+                move.to.r
+            ][
+                move.to.c
+            ];
+
+        }
+
+
+        /*
+         * En passant.
+         */
+
+        if (
+            move.enPassant
+        ) {
+
+            return board[
+                move.from.r
+            ][
+                move.to.c
+            ];
+
+        }
+
+
+        return null;
+
+    },
+
+
+    /* ========================================================
+       RECORD MOVE
+    ======================================================== */
+
+    recordMove(
+        move,
+        boardBefore,
+        movingColor,
+        capturedPiece
+    ) {
+
+        let notation;
+
+
+        try {
+
+            notation =
+                ChessGame.moveNotation(
+                    move,
+                    boardBefore
+                );
+
+        } catch (error) {
+
+            notation =
+                this.createSimpleNotation(
+                    move,
+                    boardBefore
+                );
+
+        }
+
+
+        this.moveHistoryDisplay.push({
+
+            move: move,
+
+            notation: notation,
+
+            color: movingColor,
+
+            captured: capturedPiece
+
+        });
+
+
+        /*
+         * Captured piece belongs to
+         * the player who made the capture.
+         */
+
+        if (capturedPiece) {
+
+            if (
+                movingColor ===
+                this.playerColor
+            ) {
+
+                this.capturedByPlayer.push(
+                    capturedPiece
+                );
+
+            } else {
+
+                this.capturedByComputer.push(
+                    capturedPiece
+                );
+
+            }
+
+        }
+
+    },
+
+
+    createSimpleNotation(
+        move,
+        boardBefore
+    ) {
+
+        const piece =
+            boardBefore[
+                move.from.r
+            ][
+                move.from.c
+            ];
+
+
+        const type =
+            ChessGame.typeOf(piece);
+
+
+        const file =
+            String.fromCharCode(
+                97 + move.to.c
             );
+
+
+        const rank =
+            8 - move.to.r;
+
+
+        const pieceLetters = {
+
+            p: "",
+
+            n: "N",
+
+            b: "B",
+
+            r: "R",
+
+            q: "Q",
+
+            k: "K"
+
+        };
+
+
+        return (
+            pieceLetters[type] +
+            file +
+            rank
+        );
+
+    },
+
+
+    /* ========================================================
+       RENDER BOARD
+    ======================================================== */
+
+    renderBoard() {
+
+        const boardElement =
+            document.getElementById(
+                "chessBoard"
+            );
+
+
+        if (!boardElement) {
 
             return;
 
         }
 
 
-        for (let displayRow = 0; displayRow < 8; displayRow++) {
-
-            for (let displayCol = 0; displayCol < 8; displayCol++) {
+        boardElement.innerHTML = "";
 
 
-                let row =
-                    this.boardFlipped
+        /*
+         * When playing Black,
+         * display board from Black's perspective.
+         */
+
+        const flipped =
+            this.playerColor === "b";
+
+
+        for (
+            let displayRow = 0;
+            displayRow < 8;
+            displayRow++
+        ) {
+
+            for (
+                let displayCol = 0;
+                displayCol < 8;
+                displayCol++
+            ) {
+
+                const row =
+                    flipped
                         ? 7 - displayRow
                         : displayRow;
 
 
-                let col =
-                    this.boardFlipped
+                const col =
+                    flipped
                         ? 7 - displayCol
                         : displayCol;
 
 
                 const square =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
 
 
                 square.className =
                     "chess-square";
 
 
+                square.classList.add(
+                    (
+                        row + col
+                    ) % 2 === 0
+                        ? "light"
+                        : "dark"
+                );
+
+
                 square.dataset.row =
                     row;
+
 
                 square.dataset.col =
                     col;
 
 
                 /*
-                 * Board color.
-                 */
-
-                const isLight =
-                    (row + col) % 2 === 0;
-
-
-                square.classList.add(
-                    isLight
-                        ? "light"
-                        : "dark"
-                );
-
-
-                /*
-                 * Last move.
+                 * Last move highlight.
                  */
 
                 if (
@@ -672,9 +1345,9 @@ const App = {
                  */
 
                 if (
-                    this.selectedSquare &&
-                    this.selectedSquare.r === row &&
-                    this.selectedSquare.c === col
+                    ChessGame.selected &&
+                    ChessGame.selected.r === row &&
+                    ChessGame.selected.c === col
                 ) {
 
                     square.classList.add(
@@ -685,11 +1358,12 @@ const App = {
 
 
                 /*
-                 * Legal move.
+                 * Legal move indicators.
                  */
 
                 const legalMove =
-                    this.highlightedMoves.find(
+                    ChessGame.legalMoves &&
+                    ChessGame.legalMoves.find(
                         move =>
                             move.to.r === row &&
                             move.to.c === col
@@ -698,17 +1372,18 @@ const App = {
 
                 if (legalMove) {
 
-                    square.classList.add(
-                        "legal-move"
-                    );
-
-
                     if (
-                        board[row][col]
+                        ChessGame.board[row][col]
                     ) {
 
                         square.classList.add(
                             "capture-move"
+                        );
+
+                    } else {
+
+                        square.classList.add(
+                            "legal-move"
                         );
 
                     }
@@ -721,35 +1396,46 @@ const App = {
                  */
 
                 const piece =
-                    board[row][col];
+                    ChessGame.board[row][col];
 
 
                 if (piece) {
 
-                    const pieceColor =
-                        ChessGame.colorOf(piece);
-
-                    const pieceType =
-                        ChessGame.typeOf(piece);
-
-
                     const pieceElement =
-                        document.createElement("span");
+                        document.createElement(
+                            "span"
+                        );
 
 
                     pieceElement.className =
                         "chess-piece";
 
 
-                    pieceElement.classList.add(
-                        pieceColor === "w"
-                            ? "white-piece"
-                            : "black-piece"
-                    );
+                    const color =
+                        ChessGame.colorOf(
+                            piece
+                        );
+
+
+                    const type =
+                        ChessGame.typeOf(
+                            piece
+                        );
 
 
                     pieceElement.textContent =
-                        PIECES[pieceColor][pieceType];
+                        PIECES[
+                            color
+                        ][
+                            type
+                        ];
+
+
+                    pieceElement.classList.add(
+                        color === "w"
+                            ? "white-piece"
+                            : "black-piece"
+                    );
 
 
                     square.appendChild(
@@ -763,34 +1449,54 @@ const App = {
                  * Coordinates.
                  */
 
-                if (displayRow === 7) {
+                if (
+                    displayRow === 7
+                ) {
 
                     const file =
-                        document.createElement("span");
+                        document.createElement(
+                            "span"
+                        );
+
 
                     file.className =
                         "coordinate file-coordinate";
 
-                    file.textContent =
-                        FILES[col];
 
-                    square.appendChild(file);
+                    file.textContent =
+                        String.fromCharCode(
+                            97 + col
+                        );
+
+
+                    square.appendChild(
+                        file
+                    );
 
                 }
 
 
-                if (displayCol === 0) {
+                if (
+                    displayCol === 0
+                ) {
 
                     const rank =
-                        document.createElement("span");
+                        document.createElement(
+                            "span"
+                        );
+
 
                     rank.className =
                         "coordinate rank-coordinate";
 
+
                     rank.textContent =
                         8 - row;
 
-                    square.appendChild(rank);
+
+                    square.appendChild(
+                        rank
+                    );
 
                 }
 
@@ -806,1078 +1512,150 @@ const App = {
     },
 
 
-    /* =====================================================
-       SQUARE CLICK
-    ===================================================== */
-
-    handleSquareClick(row, col) {
-
-        if (!this.gameStarted) {
-            return;
-        }
-
-
-        if (ChessGame.gameOver) {
-            return;
-        }
-
-
-        /*
-         * Only allow player to move.
-         */
-
-        if (
-            ChessGame.turn !==
-            ChessGame.playerColor
-        ) {
-
-            return;
-
-        }
-
-
-        const piece =
-            ChessGame.board[row][col];
-
-
-        /*
-         * If a square is selected,
-         * see if clicked square is a legal destination.
-         */
-
-        if (this.selectedSquare) {
-
-            const move =
-                this.highlightedMoves.find(
-                    candidate =>
-                        candidate.to.r === row &&
-                        candidate.to.c === col
-                );
-
-
-            if (move) {
-
-                this.executePlayerMove(
-                    move
-                );
-
-                return;
-
-            }
-
-        }
-
-
-        /*
-         * Select player's piece.
-         */
-
-        if (
-            piece &&
-            ChessGame.colorOf(piece) ===
-            ChessGame.playerColor
-        ) {
-
-            this.selectedSquare = {
-                r: row,
-                c: col
-            };
-
-
-            this.highlightedMoves =
-                ChessGame.getMovesForSquare(
-                    row,
-                    col
-                );
-
-
-            this.renderBoard();
-
-            return;
-
-        }
-
-
-        /*
-         * Clear selection.
-         */
-
-        this.selectedSquare = null;
-
-        this.highlightedMoves = [];
-
-        this.renderBoard();
-
-    },
-
-
-    /* =====================================================
-       PLAYER MOVE
-    ===================================================== */
-
-    executePlayerMove(move) {
-
-        const boardBefore =
-            ChessGame.cloneBoard(
-                ChessGame.board
-            );
-
-
-        const captured =
-            move.enPassant
-                ? ChessGame.board[
-                    move.from.r
-                ][
-                    move.to.c
-                ]
-                : ChessGame.board[
-                    move.to.r
-                ][
-                    move.to.c
-                ];
-
-
-        const notation =
-            ChessGame.moveNotation(
-                move,
-                boardBefore
-            );
-
-
-        const success =
-            ChessGame.makeMove(
-                move
-            );
-
-
-        if (!success) {
-            return;
-        }
-
-
-        /*
-         * Record captured piece.
-         */
-
-        if (captured) {
-
-            if (
-                ChessGame.colorOf(captured) === "w"
-            ) {
-
-                this.capturedWhite.push(
-                    captured
-                );
-
-            } else {
-
-                this.capturedBlack.push(
-                    captured
-                );
-
-            }
-
-        }
-
-
-        this.lastMove = {
-            from: {
-                ...move.from
-            },
-            to: {
-                ...move.to
-            }
-        };
-
-
-        this.selectedSquare = null;
-
-        this.highlightedMoves = [];
-
-
-        this.addMoveToHistory(
-            notation,
-            ChessGame.playerColor
-        );
-
-
-        this.renderBoard();
-
-        this.updateCapturedPieces();
-
-        this.updateMaterial();
-
-        this.updateMoveCount();
-
-        this.updateGameStatus();
-
-
-        if (this.checkGameFinished()) {
-            return;
-        }
-
-
-        /*
-         * Computer's turn.
-         */
-
-        this.stopClock();
-
-        this.startComputerClock();
-
-
-        setTimeout(() => {
-
-            if (
-                this.gameStarted &&
-                !ChessGame.gameOver &&
-                ChessGame.turn ===
-                ChessGame.computerColor
-            ) {
-
-                this.computerMove();
-
-            }
-
-        }, 400);
-
-    },
-
-
-    /* =====================================================
-       COMPUTER MOVE
-    ===================================================== */
-
-    computerMove() {
-
-        if (!this.gameStarted) {
-            return;
-        }
-
-
-        if (ChessGame.gameOver) {
-            return;
-        }
-
-
-        if (
-            ChessGame.turn !==
-            ChessGame.computerColor
-        ) {
-
-            return;
-
-        }
-
-
-        const boardBefore =
-            ChessGame.cloneBoard(
-                ChessGame.board
-            );
-
-
-        const move =
-            ChessGame.findBestMove(
-                this.difficulty
-            );
-
-
-        if (!move) {
-
-            this.updateGameStatus();
-
-            this.checkGameFinished();
-
-            return;
-
-        }
-
-
-        const captured =
-            move.enPassant
-                ? ChessGame.board[
-                    move.from.r
-                ][
-                    move.to.c
-                ]
-                : ChessGame.board[
-                    move.to.r
-                ][
-                    move.to.c
-                ];
-
-
-        const notation =
-            ChessGame.moveNotation(
-                move,
-                boardBefore
-            );
-
-
-        const success =
-            ChessGame.makeMove(
-                move
-            );
-
-
-        if (!success) {
-            return;
-        }
-
-
-        if (captured) {
-
-            if (
-                ChessGame.colorOf(captured) === "w"
-            ) {
-
-                this.capturedWhite.push(
-                    captured
-                );
-
-            } else {
-
-                this.capturedBlack.push(
-                    captured
-                );
-
-            }
-
-        }
-
-
-        this.lastMove = {
-            from: {
-                ...move.from
-            },
-            to: {
-                ...move.to
-            }
-        };
-
-
-        this.addMoveToHistory(
-            notation,
-            ChessGame.computerColor
-        );
-
-
-        this.renderBoard();
-
-        this.updateCapturedPieces();
-
-        this.updateMaterial();
-
-        this.updateMoveCount();
-
-        this.updateGameStatus();
-
-
-        if (this.checkGameFinished()) {
-            return;
-        }
-
-
-        /*
-         * Back to player.
-         */
-
-        this.stopClock();
-
-        this.startPlayerClock();
-
-    },
-
-
-    /* =====================================================
+    /* ========================================================
        MOVE HISTORY
-    ===================================================== */
+    ======================================================== */
 
-    clearMoveHistory() {
+    renderMoveHistory() {
 
-        const history =
+        const container =
             document.getElementById(
                 "moveHistory"
             );
 
 
-        if (history) {
+        if (!container) {
 
-            history.innerHTML = "";
-
-        }
-
-    },
-
-
-    addMoveToHistory(
-        notation,
-        color
-    ) {
-
-        const history =
-            document.getElementById(
-                "moveHistory"
-            );
-
-
-        if (!history) {
             return;
+
         }
 
 
-        const moves =
-            history.querySelectorAll(
-                ".move-row"
-            );
-
-
-        const moveNumber =
-            Math.floor(
-                moves.length / 2
-            ) + 1;
-
-
-        let row;
+        container.innerHTML = "";
 
 
         if (
-            color === "w"
+            this.moveHistoryDisplay.length === 0
         ) {
 
-            row =
-                document.createElement("div");
+            const empty =
+                document.createElement(
+                    "div"
+                );
+
+
+            empty.className =
+                "empty-history";
+
+
+            empty.textContent =
+                "No moves yet";
+
+
+            container.appendChild(
+                empty
+            );
+
+
+            return;
+
+        }
+
+
+        for (
+            let i = 0;
+            i <
+            this.moveHistoryDisplay.length;
+            i += 2
+        ) {
+
+            const whiteMove =
+                this.moveHistoryDisplay[i];
+
+
+            const blackMove =
+                this.moveHistoryDisplay[i + 1];
+
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
 
             row.className =
                 "move-row";
 
-            row.innerHTML = `
-                <span class="move-number">
-                    ${moveNumber}.
-                </span>
 
-                <span class="white-move">
-                    ${notation}
-                </span>
-
-                <span class="black-move">
-                    —
-                </span>
-            `;
-
-
-            history.appendChild(row);
-
-        } else {
-
-            row =
-                moves[moves.length - 1];
-
-
-            if (row) {
-
-                const blackMove =
-                    row.querySelector(
-                        ".black-move"
-                    );
-
-
-                if (blackMove) {
-
-                    blackMove.textContent =
-                        notation;
-
-                }
-
-            } else {
-
-                row =
-                    document.createElement("div");
-
-                row.className =
-                    "move-row";
-
-                row.innerHTML = `
-                    <span class="move-number">
-                        ${moveNumber}.
-                    </span>
-
-                    <span class="white-move">
-                        —
-                    </span>
-
-                    <span class="black-move">
-                        ${notation}
-                    </span>
-                `;
-
-
-                history.appendChild(row);
-
-            }
-
-        }
-
-
-        history.scrollTop =
-            history.scrollHeight;
-
-    },
-
-
-    /* =====================================================
-       UNDO
-    ===================================================== */
-
-    undoMove() {
-
-        if (!this.gameStarted) {
-            return;
-        }
-
-
-        if (
-            ChessGame.history.length === 0
-        ) {
-
-            return;
-
-        }
-
-
-        this.stopClock();
-
-
-        /*
-         * If the computer just moved,
-         * undo computer + player's previous move.
-         */
-
-        if (
-            ChessGame.turn ===
-            ChessGame.playerColor
-        ) {
-
-            ChessGame.undo();
-
-
-            if (
-                ChessGame.history.length > 0
-            ) {
-
-                ChessGame.undo();
-
-            }
-
-        } else {
-
-            ChessGame.undo();
-
-        }
-
-
-        this.rebuildCapturedPieces();
-
-
-        this.lastMove = null;
-
-        this.selectedSquare = null;
-
-        this.highlightedMoves = [];
-
-
-        /*
-         * Rebuild move list.
-         */
-
-        this.rebuildMoveHistory();
-
-
-        this.renderBoard();
-
-        this.updateCapturedPieces();
-
-        this.updateMaterial();
-
-        this.updateMoveCount();
-
-        this.updateGameStatus();
-
-
-        if (
-            ChessGame.turn ===
-            ChessGame.playerColor
-        ) {
-
-            this.startPlayerClock();
-
-        } else {
-
-            this.startComputerClock();
-
-        }
-
-    },
-
-
-    rebuildCapturedPieces() {
-
-        this.capturedWhite = [];
-
-        this.capturedBlack = [];
-
-
-        /*
-         * Each history snapshot contains
-         * the piece captured by that move.
-         */
-
-        ChessGame.history.forEach(snapshot => {
-
-            if (!snapshot.captured) {
-                return;
-            }
-
-
-            if (
-                ChessGame.colorOf(
-                    snapshot.captured
-                ) === "w"
-            ) {
-
-                this.capturedWhite.push(
-                    snapshot.captured
-                );
-
-            } else {
-
-                this.capturedBlack.push(
-                    snapshot.captured
-                );
-
-            }
-
-        });
-
-    },
-
-
-    rebuildMoveHistory() {
-
-        this.clearMoveHistory();
-
-
-        /*
-         * History stores board BEFORE each move.
-         * The move object is stored inside snapshot.
-         */
-
-        ChessGame.history.forEach(snapshot => {
-
-            if (!snapshot.move) {
-                return;
-            }
-
-
-            const notation =
-                ChessGame.moveNotation(
-                    snapshot.move,
-                    snapshot.board
+            const number =
+                document.createElement(
+                    "span"
                 );
 
 
-            const color =
-                ChessGame.colorOf(
-                    snapshot.piece
+            number.className =
+                "move-number";
+
+
+            number.textContent =
+                `${Math.floor(i / 2) + 1}.`;
+
+
+            const white =
+                document.createElement(
+                    "span"
                 );
 
 
-            this.addMoveToHistory(
-                notation,
-                color
-            );
-
-        });
-
-    },
+            white.className =
+                "white-move";
 
 
-    /* =====================================================
-       RESIGN
-    ===================================================== */
-
-    resignGame() {
-
-        if (!this.gameStarted) {
-            return;
-        }
+            white.textContent =
+                whiteMove
+                    ? whiteMove.notation
+                    : "";
 
 
-        if (ChessGame.gameOver) {
-            return;
-        }
+            const black =
+                document.createElement(
+                    "span"
+                );
 
 
-        ChessGame.gameOver = true;
-
-        ChessGame.winner =
-            ChessGame.computerColor;
+            black.className =
+                "black-move";
 
 
-        this.stopClock();
-
-        this.updateGameStatus();
-
-        this.recordGameResult(
-            "loss"
-        );
-
-    },
+            black.textContent =
+                blackMove
+                    ? blackMove.notation
+                    : "";
 
 
-    /* =====================================================
-       GAME STATUS
-    ===================================================== */
-
-    updateGameStatus() {
-
-        const status =
-            document.getElementById(
-                "gameStatus"
+            row.appendChild(
+                number
             );
 
 
-        if (!status) {
-            return;
-        }
-
-
-        if (!this.gameStarted) {
-
-            status.textContent =
-                "Choose your side and start a new game.";
-
-            return;
-
-        }
-
-
-        if (ChessGame.gameOver) {
-
-            if (
-                ChessGame.winner ===
-                "draw"
-            ) {
-
-                status.textContent =
-                    "Draw";
-
-                return;
-
-            }
-
-
-            if (
-                ChessGame.winner ===
-                ChessGame.playerColor
-            ) {
-
-                status.textContent =
-                    "You Win!";
-
-                return;
-
-            }
-
-
-            status.textContent =
-                "Computer Wins";
-
-            return;
-
-        }
-
-
-        const inCheck =
-            ChessGame.isInCheck(
-                ChessGame.board,
-                ChessGame.turn
+            row.appendChild(
+                white
             );
 
 
-        if (
-            ChessGame.turn ===
-            ChessGame.playerColor
-        ) {
+            row.appendChild(
+                black
+            );
 
-            status.textContent =
-                inCheck
-                    ? "Your move — CHECK!"
-                    : "Your move";
 
-        } else {
-
-            status.textContent =
-                inCheck
-                    ? "Computer is thinking — CHECK!"
-                    : "Computer's move";
+            container.appendChild(
+                row
+            );
 
         }
 
     },
 
-
-    checkGameFinished() {
-
-        if (!ChessGame.gameOver) {
-
-            return false;
-
-        }
-
-
-        this.stopClock();
-
-        this.updateGameStatus();
-
-
-        if (
-            !this.gameResultRecorded
-        ) {
-
-            if (
-                ChessGame.winner ===
-                "draw"
-            ) {
-
-                this.recordGameResult(
-                    "draw"
-                );
-
-            } else if (
-                ChessGame.winner ===
-                ChessGame.playerColor
-            ) {
-
-                this.recordGameResult(
-                    "win"
-                );
-
-            } else {
-
-                this.recordGameResult(
-                    "loss"
-                );
-
-            }
-
-        }
-
-
-        return true;
-
-    },
-
-
-    /* =====================================================
-       CAPTURED PIECES
-    ===================================================== */
-
-    updateCapturedPieces() {
-
-        const computerCaptured =
-            document.getElementById(
-                "computerCaptured"
-            );
-
-        const playerCaptured =
-            document.getElementById(
-                "playerCaptured"
-            );
-
-
-        if (
-            !computerCaptured ||
-            !playerCaptured
-        ) {
-
-            return;
-
-        }
-
-
-        let playerPieces;
-        let computerPieces;
-
-
-        if (
-            ChessGame.playerColor === "w"
-        ) {
-
-            /*
-             * Player is White.
-             * Player captured Black.
-             * Computer captured White.
-             */
-
-            playerPieces =
-                this.capturedBlack;
-
-            computerPieces =
-                this.capturedWhite;
-
-        } else {
-
-            /*
-             * Player is Black.
-             * Player captured White.
-             * Computer captured Black.
-             */
-
-            playerPieces =
-                this.capturedWhite;
-
-            computerPieces =
-                this.capturedBlack;
-
-        }
-
-
-        playerCaptured.innerHTML =
-            playerPieces
-                .map(piece => {
-
-                    const color =
-                        ChessGame.colorOf(piece);
-
-                    const type =
-                        ChessGame.typeOf(piece);
-
-                    return `
-                        <span class="captured-piece">
-                            ${PIECES[color][type]}
-                        </span>
-                    `;
-
-                })
-                .join("");
-
-
-        computerCaptured.innerHTML =
-            computerPieces
-                .map(piece => {
-
-                    const color =
-                        ChessGame.colorOf(piece);
-
-                    const type =
-                        ChessGame.typeOf(piece);
-
-                    return `
-                        <span class="captured-piece">
-                            ${PIECES[color][type]}
-                        </span>
-                    `;
-
-                })
-                .join("");
-
-    },
-
-
-    /* =====================================================
-       MATERIAL
-    ===================================================== */
-
-    updateMaterial() {
-
-        const material =
-            document.getElementById(
-                "materialDisplay"
-            );
-
-
-        if (!material) {
-            return;
-        }
-
-
-        let playerScore = 0;
-        let computerScore = 0;
-
-
-        for (
-            let r = 0;
-            r < 8;
-            r++
-        ) {
-
-            for (
-                let c = 0;
-                c < 8;
-                c++
-            ) {
-
-                const piece =
-                    ChessGame.board[r][c];
-
-
-                if (!piece) {
-                    continue;
-                }
-
-
-                const value =
-                    PIECE_VALUES[
-                        ChessGame.typeOf(piece)
-                    ];
-
-
-                if (
-                    ChessGame.colorOf(piece) ===
-                    ChessGame.playerColor
-                ) {
-
-                    playerScore += value;
-
-                } else {
-
-                    computerScore += value;
-
-                }
-
-            }
-
-        }
-
-
-        const difference =
-            playerScore - computerScore;
-
-
-        if (difference > 0) {
-
-            material.textContent =
-                `You +${difference}`;
-
-        } else if (difference < 0) {
-
-            material.textContent =
-                `Computer +${Math.abs(difference)}`;
-
-        } else {
-
-            material.textContent =
-                "Material Equal";
-
-        }
-
-    },
-
-
-    /* =====================================================
-       MOVE COUNT
-    ===================================================== */
 
     updateMoveCount() {
 
@@ -1888,160 +1666,687 @@ const App = {
 
 
         if (!element) {
+
             return;
+
         }
+
+
+        const count =
+            ChessGame.history
+                ? ChessGame.history.length
+                : this.moveHistoryDisplay.length;
 
 
         element.textContent =
-            ChessGame.history.length;
+            `${count} MOVES`;
 
     },
 
 
-    /* =====================================================
+    /* ========================================================
+       MATERIAL
+    ======================================================== */
+
+    updateMaterial() {
+
+        const element =
+            document.getElementById(
+                "materialDisplay"
+            );
+
+
+        if (!element) {
+
+            return;
+
+        }
+
+
+        let whiteMaterial = 0;
+
+        let blackMaterial = 0;
+
+
+        for (
+            let row = 0;
+            row < 8;
+            row++
+        ) {
+
+            for (
+                let col = 0;
+                col < 8;
+                col++
+            ) {
+
+                const piece =
+                    ChessGame.board[
+                        row
+                    ][
+                        col
+                    ];
+
+
+                if (!piece) {
+
+                    continue;
+
+                }
+
+
+                const type =
+                    ChessGame.typeOf(
+                        piece
+                    );
+
+
+                const value =
+                    PIECE_VALUES[type] || 0;
+
+
+                if (
+                    ChessGame.colorOf(
+                        piece
+                    ) === "w"
+                ) {
+
+                    whiteMaterial += value;
+
+                } else {
+
+                    blackMaterial += value;
+
+                }
+
+            }
+
+        }
+
+
+        const difference =
+            whiteMaterial -
+            blackMaterial;
+
+
+        if (difference === 0) {
+
+            element.textContent =
+                "Equal";
+
+            return;
+
+        }
+
+
+        if (difference > 0) {
+
+            element.textContent =
+                `White +${difference}`;
+
+        } else {
+
+            element.textContent =
+                `Black +${Math.abs(
+                    difference
+                )}`;
+
+        }
+
+    },
+
+
+    /* ========================================================
+       CAPTURED PIECES
+    ======================================================== */
+
+    clearCapturedPieces() {
+
+        const player =
+            document.getElementById(
+                "playerCaptured"
+            );
+
+
+        const computer =
+            document.getElementById(
+                "computerCaptured"
+            );
+
+
+        if (player) {
+
+            player.innerHTML = "";
+
+        }
+
+
+        if (computer) {
+
+            computer.innerHTML = "";
+
+        }
+
+    },
+
+
+    renderCapturedPieces() {
+
+        const player =
+            document.getElementById(
+                "playerCaptured"
+            );
+
+
+        const computer =
+            document.getElementById(
+                "computerCaptured"
+            );
+
+
+        if (player) {
+
+            player.innerHTML =
+                this.capturedByPlayer
+                    .map(piece =>
+                        this.pieceToSymbol(piece)
+                    )
+                    .join(" ");
+
+        }
+
+
+        if (computer) {
+
+            computer.innerHTML =
+                this.capturedByComputer
+                    .map(piece =>
+                        this.pieceToSymbol(piece)
+                    )
+                    .join(" ");
+
+        }
+
+    },
+
+
+    pieceToSymbol(piece) {
+
+        const color =
+            ChessGame.colorOf(
+                piece
+            );
+
+
+        const type =
+            ChessGame.typeOf(
+                piece
+            );
+
+
+        if (
+            PIECES[color] &&
+            PIECES[color][type]
+        ) {
+
+            return PIECES[color][type];
+
+        }
+
+
+        return "";
+
+    },
+
+
+    /* ========================================================
+       STATUS
+    ======================================================== */
+
+    updateGameStatus(message) {
+
+        const element =
+            document.getElementById(
+                "gameStatus"
+            );
+
+
+        if (element) {
+
+            element.textContent =
+                message;
+
+        }
+
+    },
+
+
+    finishIfGameOver() {
+
+        if (
+            !ChessGame.gameOver
+        ) {
+
+            return false;
+
+        }
+
+
+        this.stopClock();
+
+
+        this.gameStarted = false;
+
+
+        let message =
+            "Game over.";
+
+
+        if (
+            ChessGame.winner ===
+            this.playerColor
+        ) {
+
+            message =
+                "CHECKMATE — YOU WIN!";
+
+
+            this.stats.wins++;
+
+        }
+        else if (
+            ChessGame.winner ===
+            this.computerColor
+        ) {
+
+            message =
+                "CHECKMATE — COMPUTER WINS.";
+
+
+            this.stats.losses++;
+
+        }
+        else {
+
+            message =
+                "DRAW — GAME OVER.";
+
+
+            this.stats.draws++;
+
+        }
+
+
+        this.stats.games++;
+
+
+        this.saveStats();
+
+        this.updateStatsDisplay();
+
+        this.updateGameStatus(
+            message
+        );
+
+        this.showBoardOverlay(
+            true,
+            message
+        );
+
+
+        return true;
+
+    },
+
+
+    /* ========================================================
+       RESIGN
+    ======================================================== */
+
+    resignGame() {
+
+        if (
+            !this.gameStarted
+        ) {
+
+            return;
+
+        }
+
+
+        const confirmed =
+            window.confirm(
+                "Are you sure you want to resign?"
+            );
+
+
+        if (!confirmed) {
+
+            return;
+
+        }
+
+
+        this.stopClock();
+
+
+        this.gameStarted = false;
+
+
+        this.stats.games++;
+
+        this.stats.losses++;
+
+
+        this.saveStats();
+
+        this.updateStatsDisplay();
+
+
+        this.updateGameStatus(
+            "You resigned. Computer wins."
+        );
+
+
+        this.showBoardOverlay(
+            true,
+            "YOU RESIGNED"
+        );
+
+    },
+
+
+    /* ========================================================
+       UNDO
+    ======================================================== */
+
+    undoMove() {
+
+        if (
+            !this.gameStarted
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            !ChessGame.history ||
+            ChessGame.history.length === 0
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * Undo player's move AND
+         * computer's previous move.
+         *
+         * This returns the game to
+         * the player's turn.
+         */
+
+        let undoCount = 1;
+
+
+        if (
+            ChessGame.turn ===
+            this.playerColor
+        ) {
+
+            undoCount = 2;
+
+        }
+
+
+        for (
+            let i = 0;
+            i < undoCount;
+            i++
+        ) {
+
+            if (
+                ChessGame.history.length > 0
+            ) {
+
+                ChessGame.undo();
+
+            }
+
+        }
+
+
+        /*
+         * Rebuild UI from engine history.
+         */
+
+        this.rebuildMoveData();
+
+
+        ChessGame.gameOver = false;
+
+        ChessGame.winner = null;
+
+
+        this.lastMove = null;
+
+
+        if (
+            ChessGame.history.length > 0
+        ) {
+
+            const last =
+                ChessGame.history[
+                    ChessGame.history.length - 1
+                ];
+
+
+            if (last && last.move) {
+
+                this.lastMove =
+                    last.move;
+
+            }
+
+        }
+
+
+        this.renderBoard();
+
+        this.renderMoveHistory();
+
+        this.updateMaterial();
+
+        this.updateMoveCount();
+
+        this.updateGameStatus(
+            ChessGame.turn ===
+            this.playerColor
+                ? "Your turn."
+                : "Computer's turn."
+        );
+
+
+        this.startClockForCurrentTurn();
+
+    },
+
+
+    rebuildMoveData() {
+
+        this.moveHistoryDisplay = [];
+
+        this.capturedByPlayer = [];
+
+        this.capturedByComputer = [];
+
+
+        /*
+         * The engine history stores snapshots.
+         * Reconstructing exact captured pieces
+         * from snapshots is more reliable by
+         * replaying the current history when
+         * available.
+         *
+         * If history entries contain move data,
+         * use those entries.
+         */
+
+        if (
+            Array.isArray(
+                ChessGame.history
+            )
+        ) {
+
+            ChessGame.history.forEach(
+                item => {
+
+                    if (
+                        !item ||
+                        !item.move
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    const movingColor =
+                        item.move.color ||
+                        null;
+
+
+                    this.moveHistoryDisplay.push({
+
+                        move: item.move,
+
+                        notation:
+                            item.notation ||
+                            this.createSimpleNotation(
+                                item.move,
+                                item.boardBefore ||
+                                ChessGame.board
+                            ),
+
+                        color:
+                            movingColor ||
+                            (
+                                this.moveHistoryDisplay.length % 2 === 0
+                                    ? "w"
+                                    : "b"
+                            ),
+
+                        captured:
+                            item.captured || null
+
+                    });
+
+                }
+            );
+
+        }
+
+    },
+
+
+    /* ========================================================
+       BOARD OVERLAY
+    ======================================================== */
+
+    showBoardOverlay(
+        show,
+        message = null
+    ) {
+
+        const overlay =
+            document.getElementById(
+                "boardOverlay"
+            );
+
+
+        if (!overlay) {
+
+            return;
+
+        }
+
+
+        if (show) {
+
+            overlay.classList.add(
+                "visible"
+            );
+
+
+            const title =
+                overlay.querySelector(
+                    "h2"
+                );
+
+
+            const paragraph =
+                overlay.querySelector(
+                    "p"
+                );
+
+
+            if (
+                message &&
+                title
+            ) {
+
+                title.textContent =
+                    message;
+
+            }
+
+
+            if (
+                message &&
+                paragraph
+            ) {
+
+                paragraph.textContent =
+                    "Start a new game to play again.";
+
+            }
+
+        } else {
+
+            overlay.classList.remove(
+                "visible"
+            );
+
+        }
+
+    },
+
+
+    /* ========================================================
        CLOCK
-    ===================================================== */
+    ======================================================== */
 
-    startPlayerClock() {
+    resetClockDisplay() {
 
-        this.stopClock();
+        this.playerTime = 600;
 
+        this.computerTime = 600;
 
-        this.playerClockTimer =
-            setInterval(() => {
-
-                if (!this.gameStarted) {
-                    return;
-                }
-
-
-                if (
-                    ChessGame.turn !==
-                    ChessGame.playerColor
-                ) {
-
-                    return;
-
-                }
-
-
-                this.playerClockSeconds--;
-
-                this.updateClocks();
-
-
-                if (
-                    this.playerClockSeconds <= 0
-                ) {
-
-                    this.playerClockSeconds = 0;
-
-                    this.stopClock();
-
-                    ChessGame.gameOver = true;
-
-                    ChessGame.winner =
-                        ChessGame.computerColor;
-
-                    this.updateGameStatus();
-
-                    this.recordGameResult(
-                        "loss"
-                    );
-
-                }
-
-            }, 1000);
+        this.updateClockDisplay();
 
     },
 
 
-    startComputerClock() {
-
-        this.stopClock();
-
-
-        this.computerClockTimer =
-            setInterval(() => {
-
-                if (!this.gameStarted) {
-                    return;
-                }
-
-
-                if (
-                    ChessGame.turn !==
-                    ChessGame.computerColor
-                ) {
-
-                    return;
-
-                }
-
-
-                this.computerClockSeconds--;
-
-                this.updateClocks();
-
-
-                if (
-                    this.computerClockSeconds <= 0
-                ) {
-
-                    this.computerClockSeconds = 0;
-
-                    this.stopClock();
-
-                    ChessGame.gameOver = true;
-
-                    ChessGame.winner =
-                        ChessGame.playerColor;
-
-                    this.updateGameStatus();
-
-                    this.recordGameResult(
-                        "win"
-                    );
-
-                }
-
-            }, 1000);
-
-    },
-
-
-    stopClock() {
-
-        if (this.playerClockTimer) {
-
-            clearInterval(
-                this.playerClockTimer
-            );
-
-            this.playerClockTimer = null;
-
-        }
-
-
-        if (this.computerClockTimer) {
-
-            clearInterval(
-                this.computerClockTimer
-            );
-
-            this.computerClockTimer = null;
-
-        }
-
-    },
-
-
-    updateClocks() {
+    updateClockDisplay() {
 
         const playerClock =
             document.getElementById(
                 "playerClock"
             );
+
 
         const computerClock =
             document.getElementById(
@@ -2053,7 +2358,7 @@ const App = {
 
             playerClock.textContent =
                 this.formatTime(
-                    this.playerClockSeconds
+                    this.playerTime
                 );
 
         }
@@ -2063,7 +2368,7 @@ const App = {
 
             computerClock.textContent =
                 this.formatTime(
-                    this.computerClockSeconds
+                    this.computerTime
                 );
 
         }
@@ -2073,144 +2378,287 @@ const App = {
 
     formatTime(seconds) {
 
-        seconds =
+        const safeSeconds =
             Math.max(
                 0,
-                seconds
+                Number(seconds) || 0
             );
 
 
         const minutes =
             Math.floor(
-                seconds / 60
+                safeSeconds / 60
             );
 
 
-        const remaining =
-            seconds % 60;
+        const remainingSeconds =
+            safeSeconds % 60;
 
 
         return (
             String(minutes).padStart(2, "0") +
             ":" +
-            String(remaining).padStart(2, "0")
+            String(
+                remainingSeconds
+            ).padStart(2, "0")
         );
 
     },
 
 
-    /* =====================================================
-       STATISTICS
-    ===================================================== */
+    startClockForCurrentTurn() {
 
-    loadStats() {
+        this.stopClock();
 
-        const saved =
-            localStorage.getItem(
-                "chessAcademyStats"
+
+        if (
+            !this.gameStarted
+        ) {
+
+            return;
+
+        }
+
+
+        this.timerInterval =
+            setInterval(
+                () => {
+
+                    if (
+                        !this.gameStarted ||
+                        ChessGame.gameOver
+                    ) {
+
+                        this.stopClock();
+
+                        return;
+
+                    }
+
+
+                    if (
+                        ChessGame.turn ===
+                        this.playerColor
+                    ) {
+
+                        this.playerTime--;
+
+                    } else {
+
+                        this.computerTime--;
+
+                    }
+
+
+                    this.updateClockDisplay();
+
+
+                    if (
+                        this.playerTime <= 0
+                    ) {
+
+                        this.handleTimeOut(
+                            this.playerColor
+                        );
+
+                    }
+
+
+                    if (
+                        this.computerTime <= 0
+                    ) {
+
+                        this.handleTimeOut(
+                            this.computerColor
+                        );
+
+                    }
+
+                },
+                1000
             );
 
+    },
 
-        if (saved) {
 
-            try {
+    stopClock() {
 
-                this.stats =
-                    JSON.parse(saved);
+        if (
+            this.timerInterval
+        ) {
 
-            } catch {
+            clearInterval(
+                this.timerInterval
+            );
 
-                this.stats = {
-                    games: 0,
-                    wins: 0,
-                    losses: 0,
-                    draws: 0
-                };
-
-            }
-
-        } else {
-
-            this.stats = {
-                games: 0,
-                wins: 0,
-                losses: 0,
-                draws: 0
-            };
+            this.timerInterval =
+                null;
 
         }
 
     },
 
 
-    saveStats() {
+    handleTimeOut(color) {
 
-        localStorage.setItem(
-            "chessAcademyStats",
-            JSON.stringify(
-                this.stats
-            )
-        );
-
-    },
+        this.stopClock();
 
 
-    recordGameResult(result) {
-
-        if (this.gameResultRecorded) {
-            return;
-        }
+        this.gameStarted = false;
 
 
-        this.gameResultRecorded = true;
+        if (
+            color ===
+            this.playerColor
+        ) {
 
-
-        this.stats.games++;
-
-
-        if (result === "win") {
-
-            this.stats.wins++;
-
-        } else if (result === "loss") {
+            this.stats.games++;
 
             this.stats.losses++;
 
+
+            this.updateGameStatus(
+                "TIME OUT — COMPUTER WINS."
+            );
+
+
+            this.showBoardOverlay(
+                true,
+                "TIME OUT"
+            );
+
         } else {
 
-            this.stats.draws++;
+            this.stats.games++;
+
+            this.stats.wins++;
+
+
+            this.updateGameStatus(
+                "TIME OUT — YOU WIN!"
+            );
+
+
+            this.showBoardOverlay(
+                true,
+                "YOU WIN"
+            );
 
         }
 
 
         this.saveStats();
 
-        this.updateStatistics();
+        this.updateStatsDisplay();
 
     },
 
 
-    updateStatistics() {
+    /* ========================================================
+       STATISTICS
+    ======================================================== */
 
-        if (!this.stats) {
-            return;
+    loadStats() {
+
+        try {
+
+            const saved =
+                localStorage.getItem(
+                    "chessStats"
+                );
+
+
+            if (saved) {
+
+                const parsed =
+                    JSON.parse(
+                        saved
+                    );
+
+
+                this.stats = {
+
+                    games:
+                        Number(
+                            parsed.games
+                        ) || 0,
+
+                    wins:
+                        Number(
+                            parsed.wins
+                        ) || 0,
+
+                    losses:
+                        Number(
+                            parsed.losses
+                        ) || 0,
+
+                    draws:
+                        Number(
+                            parsed.draws
+                        ) || 0
+
+                };
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Unable to load chess statistics.",
+                error
+            );
+
         }
 
+
+        this.updateStatsDisplay();
+
+    },
+
+
+    saveStats() {
+
+        try {
+
+            localStorage.setItem(
+                "chessStats",
+                JSON.stringify(
+                    this.stats
+                )
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "Unable to save chess statistics.",
+                error
+            );
+
+        }
+
+    },
+
+
+    updateStatsDisplay() {
 
         const games =
             document.getElementById(
                 "games"
             );
 
+
         const wins =
             document.getElementById(
                 "wins"
             );
 
+
         const losses =
             document.getElementById(
                 "losses"
             );
+
 
         const draws =
             document.getElementById(
@@ -2219,31 +2667,42 @@ const App = {
 
 
         if (games) {
+
             games.textContent =
                 this.stats.games;
+
         }
+
 
         if (wins) {
+
             wins.textContent =
                 this.stats.wins;
+
         }
+
 
         if (losses) {
+
             losses.textContent =
                 this.stats.losses;
+
         }
 
+
         if (draws) {
+
             draws.textContent =
                 this.stats.draws;
+
         }
 
     },
 
 
-    /* =====================================================
+    /* ========================================================
        PWA
-    ===================================================== */
+    ======================================================== */
 
     bindPWA() {
 
@@ -2253,49 +2712,87 @@ const App = {
             );
 
 
-        if (!installButton) {
-            return;
-        }
-
-
-        let deferredPrompt = null;
-
-
         window.addEventListener(
             "beforeinstallprompt",
             event => {
 
                 event.preventDefault();
 
-                deferredPrompt =
+
+                this.deferredInstallPrompt =
                     event;
 
-                installButton.style.display =
-                    "inline-flex";
+
+                if (installButton) {
+
+                    installButton.style.display =
+                        "inline-flex";
+
+                }
 
             }
         );
 
 
-        installButton.addEventListener(
-            "click",
-            async () => {
+        if (installButton) {
 
-                if (!deferredPrompt) {
-                    return;
+            installButton.addEventListener(
+                "click",
+                async () => {
+
+                    if (
+                        !this.deferredInstallPrompt
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    this.deferredInstallPrompt.prompt();
+
+
+                    try {
+
+                        await this.deferredInstallPrompt.userChoice;
+
+                    } catch (error) {
+
+                        console.warn(
+                            "PWA installation was cancelled.",
+                            error
+                        );
+
+                    }
+
+
+                    this.deferredInstallPrompt =
+                        null;
+
+
+                    installButton.style.display =
+                        "none";
+
                 }
+            );
+
+        }
 
 
-                deferredPrompt.prompt();
+        window.addEventListener(
+            "appinstalled",
+            () => {
+
+                this.deferredInstallPrompt =
+                    null;
 
 
-                await deferredPrompt.userChoice;
+                if (installButton) {
 
+                    installButton.style.display =
+                        "none";
 
-                deferredPrompt = null;
-
-                installButton.style.display =
-                    "none";
+                }
 
             }
         );
@@ -2305,9 +2802,9 @@ const App = {
 };
 
 
-/* =========================================================
+/* ============================================================
    START APPLICATION
-========================================================= */
+============================================================ */
 
 document.addEventListener(
     "DOMContentLoaded",
