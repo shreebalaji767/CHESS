@@ -1,389 +1,291 @@
 /* =========================================================
-   CHESS MASTER APPLICATION
+   APP CONTROLLER
 ========================================================= */
 
 
 /* =========================================================
-   STORAGE
+   PLAYER COLOR
 ========================================================= */
 
-const defaultStats = {
-
-    games: 0,
-    wins: 0,
-    losses: 0,
-    draws: 0
-
-};
+let selectedPlayerColor = "w";
 
 
-function getStats() {
+document.querySelectorAll(
+    ".color-choice"
+).forEach(
+    button => {
 
-    return JSON.parse(
-        localStorage.getItem(
-            "chessMasterStats"
-        )
-    ) || {
-        ...defaultStats
-    };
+        button.addEventListener(
+            "click",
+            () => {
 
-}
+                document
+                    .querySelectorAll(
+                        ".color-choice"
+                    )
+                    .forEach(
+                        item =>
+                            item.classList.remove(
+                                "active"
+                            )
+                    );
 
 
-function saveStats(stats) {
+                button.classList.add(
+                    "active"
+                );
 
-    localStorage.setItem(
-        "chessMasterStats",
-        JSON.stringify(stats)
-    );
 
-}
+                selectedPlayerColor =
+                    button.dataset.color;
+
+
+                /*
+                   DO NOT START THE GAME
+                   HERE.
+
+                   We only select the color.
+                   User must press Start Game.
+                */
+
+                const playerColorText =
+                    document.getElementById(
+                        "playerColorText"
+                    );
+
+
+                if (
+                    playerColorText
+                ) {
+
+                    playerColorText.textContent =
+                        selectedPlayerColor === "w"
+                            ? "White"
+                            : "Black";
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   START GAME BUTTON
+========================================================= */
+
+document.getElementById(
+    "startGame"
+)?.addEventListener(
+    "click",
+    () => {
+
+        const difficultySelect =
+            document.getElementById(
+                "difficulty"
+            );
+
+
+        if (
+            difficultySelect
+        ) {
+
+            window.difficulty =
+                Number(
+                    difficultySelect.value
+                );
+
+        }
+
+
+        /*
+           THIS IS THE IMPORTANT PART.
+
+           The selected color is explicitly
+           passed to newGame().
+        */
+
+        newGame(
+            selectedPlayerColor
+        );
+
+    }
+);
+
+
+/* =========================================================
+   NEW GAME BUTTON
+========================================================= */
+
+document.getElementById(
+    "newGame"
+)?.addEventListener(
+    "click",
+    () => {
+
+        newGame(
+            selectedPlayerColor
+        );
+
+    }
+);
+
+
+/* =========================================================
+   UNDO
+========================================================= */
+
+document.getElementById(
+    "undoMove"
+)?.addEventListener(
+    "click",
+    () => {
+
+        undoMove();
+
+    }
+);
+
+
+/* =========================================================
+   FLIP BOARD
+========================================================= */
+
+document.getElementById(
+    "flipBoard"
+)?.addEventListener(
+    "click",
+    () => {
+
+        flipBoard();
+
+    }
+);
+
+
+/* =========================================================
+   RESIGN
+========================================================= */
+
+document.getElementById(
+    "resignGame"
+)?.addEventListener(
+    "click",
+    () => {
+
+        if (
+            confirm(
+                "Are you sure you want to resign?"
+            )
+        ) {
+
+            resignGame();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MODAL NEW GAME
+========================================================= */
+
+document.getElementById(
+    "modalNewGame"
+)?.addEventListener(
+    "click",
+    () => {
+
+        document
+            .getElementById(
+                "gameModal"
+            )
+            .classList.remove(
+                "show"
+            );
+
+
+        newGame(
+            selectedPlayerColor
+        );
+
+    }
+);
 
 
 /* =========================================================
    NAVIGATION
 ========================================================= */
 
-function openSection(
-    sectionName
-) {
+document.querySelectorAll(
+    ".nav-button"
+).forEach(
+    button => {
 
-    document
-        .querySelectorAll(".section")
-        .forEach(
-            section => {
+        button.addEventListener(
+            "click",
+            () => {
 
-                section.classList.remove(
+                const target =
+                    button.dataset.section;
+
+
+                document
+                    .querySelectorAll(
+                        ".nav-button"
+                    )
+                    .forEach(
+                        item =>
+                            item.classList.remove(
+                                "active"
+                            )
+                    );
+
+
+                button.classList.add(
                     "active"
                 );
 
-            }
-        );
 
-
-    const section =
-        document.getElementById(
-            sectionName
-        );
-
-
-    if (section) {
-
-        section.classList.add(
-            "active"
-        );
-
-    }
-
-
-    document
-        .querySelectorAll(".nav-button")
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.section ===
-                    sectionName
-                );
-
-            }
-        );
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
-
-}
-
-
-/* =========================================================
-   NAV BUTTONS
-========================================================= */
-
-document
-    .querySelectorAll(".nav-button")
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    openSection(
-                        button.dataset.section
+                document
+                    .querySelectorAll(
+                        ".section"
+                    )
+                    .forEach(
+                        section =>
+                            section.classList.remove(
+                                "active"
+                            )
                     );
 
-                }
-            );
 
-        }
-    );
-
-
-/* =========================================================
-   HOME BUTTONS
-========================================================= */
-
-document
-    .getElementById(
-        "playGameButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            openSection("play");
-
-            startSelectedGame();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "quickPlayButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            openSection("play");
-
-            startSelectedGame();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "computerGameButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            openSection("play");
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "academyButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            openSection("academy");
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "puzzleButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            openSection("puzzles");
-
-        }
-    );
-
-
-/* =========================================================
-   COLOR SELECTION
-========================================================= */
-
-let selectedColor =
-    localStorage.getItem(
-        "chessColor"
-    ) || "white";
-
-
-document
-    .querySelectorAll(
-        ".color-option"
-    )
-    .forEach(
-        button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.color ===
-                selectedColor
-            );
-
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    document
-                        .querySelectorAll(
-                            ".color-option"
-                        )
-                        .forEach(
-                            b =>
-                                b.classList.remove(
-                                    "active"
-                                )
-                        );
-
-
-                    button.classList.add(
+                document
+                    .getElementById(
+                        target
+                    )
+                    ?.classList.add(
                         "active"
                     );
 
-
-                    selectedColor =
-                        button.dataset.color;
-
-
-                    localStorage.setItem(
-                        "chessColor",
-                        selectedColor
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-function startSelectedGame() {
-
-    if (
-        window.setPlayerColor
-    ) {
-
-        window.setPlayerColor(
-            selectedColor
+            }
         );
 
     }
-
-}
+);
 
 
 /* =========================================================
-   TIME CONTROL
+   CHESS CLOCK
 ========================================================= */
 
-let selectedMinutes = 1;
+let whiteTime = 600;
 
-let selectedIncrement = 0;
-
-let whiteTime = 60;
-
-let blackTime = 60;
+let blackTime = 600;
 
 let clockInterval = null;
-
-
-document
-    .querySelectorAll(
-        ".time-option"
-    )
-    .forEach(
-        button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    document
-                        .querySelectorAll(
-                            ".time-option"
-                        )
-                        .forEach(
-                            b =>
-                                b.classList.remove(
-                                    "active"
-                                )
-                        );
-
-
-                    button.classList.add(
-                        "active"
-                    );
-
-
-                    selectedMinutes =
-                        parseInt(
-                            button.dataset.minutes
-                        );
-
-
-                    selectedIncrement =
-                        parseInt(
-                            button.dataset.increment
-                        );
-
-
-                    if (
-                        window.newGame
-                    ) {
-
-                        window.newGame();
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
-
-function resetChessClock() {
-
-    stopChessClock();
-
-
-    whiteTime =
-        selectedMinutes * 60;
-
-    blackTime =
-        selectedMinutes * 60;
-
-
-    renderClocks();
-
-    updateActiveClock();
-
-}
-
-
-function renderClocks() {
-
-    document.getElementById(
-        "whiteClock"
-    ).textContent =
-        formatTime(
-            whiteTime
-        );
-
-
-    document.getElementById(
-        "blackClock"
-    ).textContent =
-        formatTime(
-            blackTime
-        );
-
-}
 
 
 function formatTime(
@@ -402,92 +304,142 @@ function formatTime(
             seconds / 60
         );
 
+
     const secs =
         seconds % 60;
 
 
     return (
         String(minutes)
-            .padStart(2,"0") +
-        ":" +
+            .padStart(2, "0")
+        +
+        ":"
+        +
         String(secs)
-            .padStart(2,"0")
+            .padStart(2, "0")
     );
 
 }
 
 
-function updateActiveClock() {
+function updateClockDisplay() {
 
-    const white =
+    const whiteClock =
         document.getElementById(
             "whiteClock"
         );
 
-    const black =
+    const blackClock =
         document.getElementById(
             "blackClock"
         );
 
 
-    white.classList.remove(
-        "active"
-    );
+    if (
+        whiteClock
+    ) {
 
-    black.classList.remove(
-        "active"
-    );
+        whiteClock.textContent =
+            formatTime(
+                whiteTime
+            );
+
+    }
 
 
     if (
-        typeof turn !== "undefined"
+        blackClock
     ) {
 
-        if (
-            turn === "w"
-        ) {
-
-            white.classList.add(
-                "active"
+        blackClock.textContent =
+            formatTime(
+                blackTime
             );
-
-        } else {
-
-            black.classList.add(
-                "active"
-            );
-
-        }
 
     }
 
 }
 
 
-function startChessClock() {
+function updateActiveClock(
+    currentTurn
+) {
 
-    stopChessClock();
+    const whiteClock =
+        document.getElementById(
+            "whiteClock"
+        );
+
+    const blackClock =
+        document.getElementById(
+            "blackClock"
+        );
+
+
+    whiteClock?.classList.remove(
+        "active-clock"
+    );
+
+    blackClock?.classList.remove(
+        "active-clock"
+    );
+
+
+    if (
+        currentTurn === "w"
+    ) {
+
+        whiteClock?.classList.add(
+            "active-clock"
+        );
+
+    } else {
+
+        blackClock?.classList.add(
+            "active-clock"
+        );
+
+    }
+
+}
+
+
+function resetChessClock() {
+
+    clearInterval(
+        clockInterval
+    );
+
+
+    whiteTime = 600;
+
+    blackTime = 600;
+
+
+    updateClockDisplay();
+
+    updateActiveClock(
+        "w"
+    );
 
 
     clockInterval =
         setInterval(
             () => {
 
+                /*
+                   'turn' comes from chess.js.
+                */
+
                 if (
-                    typeof gameOver !==
-                    "undefined" &&
+                    typeof turn ===
+                    "undefined" ||
                     gameOver
                 ) {
 
                     return;
 
                 }
-
-
-                if (
-                    typeof turn ===
-                    "undefined"
-                ) return;
 
 
                 if (
@@ -503,21 +455,43 @@ function startChessClock() {
                 }
 
 
-                renderClocks();
+                updateClockDisplay();
 
-                updateActiveClock();
+                updateActiveClock(
+                    turn
+                );
 
 
                 if (
                     whiteTime <= 0
                 ) {
 
-                    window.finishGame?.(
-                        "loss",
-                        "Your time ran out."
+                    clearInterval(
+                        clockInterval
                     );
 
-                    stopChessClock();
+                    gameOver = true;
+
+
+                    if (
+                        playerColor === "w"
+                    ) {
+
+                        finishGame(
+                            "loss",
+                            "Time Out",
+                            "Your time has run out."
+                        );
+
+                    } else {
+
+                        finishGame(
+                            "win",
+                            "You Win!",
+                            "The computer ran out of time."
+                        );
+
+                    }
 
                 }
 
@@ -526,12 +500,32 @@ function startChessClock() {
                     blackTime <= 0
                 ) {
 
-                    window.finishGame?.(
-                        "win",
-                        "Computer's time ran out."
+                    clearInterval(
+                        clockInterval
                     );
 
-                    stopChessClock();
+                    gameOver = true;
+
+
+                    if (
+                        playerColor === "b"
+                    ) {
+
+                        finishGame(
+                            "loss",
+                            "Time Out",
+                            "Your time has run out."
+                        );
+
+                    } else {
+
+                        finishGame(
+                            "win",
+                            "You Win!",
+                            "The computer ran out of time."
+                        );
+
+                    }
 
                 }
 
@@ -542,605 +536,314 @@ function startChessClock() {
 }
 
 
-function stopChessClock() {
-
-    if (clockInterval) {
-
-        clearInterval(
-            clockInterval
-        );
-
-        clockInterval = null;
-
-    }
-
-}
-
-
-function addChessTime(
-    color
+function switchChessClock(
+    currentTurn
 ) {
 
-    if (
-        selectedIncrement <= 0
-    ) return;
-
-
-    if (
-        color === "w"
-    ) {
-
-        whiteTime +=
-            selectedIncrement;
-
-    } else {
-
-        blackTime +=
-            selectedIncrement;
-
-    }
-
-
-    renderClocks();
+    updateActiveClock(
+        currentTurn
+    );
 
 }
 
 
-/* =========================================================
-   HOOKS USED BY CHESS ENGINE
-========================================================= */
+function stopChessClock() {
+
+    clearInterval(
+        clockInterval
+    );
+
+}
+
 
 window.resetChessClock =
     resetChessClock;
 
+window.switchChessClock =
+    switchChessClock;
+
 window.stopChessClock =
     stopChessClock;
-
-window.addChessTime =
-    addChessTime;
-
-
-/* =========================================================
-   NEW GAME
-========================================================= */
-
-document
-    .getElementById(
-        "newGame"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            selectedColor =
-                document.querySelector(
-                    ".color-option.active"
-                )?.dataset.color ||
-                "white";
-
-
-            if (
-                window.setPlayerColor
-            ) {
-
-                window.setPlayerColor(
-                    selectedColor
-                );
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   FLIP
-========================================================= */
-
-document
-    .getElementById(
-        "flipBoard"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            window.flipBoard?.();
-
-        }
-    );
-
-
-/* =========================================================
-   UNDO
-========================================================= */
-
-document
-    .getElementById(
-        "undoMove"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            window.undoMove?.();
-
-        }
-    );
-
-
-/* =========================================================
-   RESIGN
-========================================================= */
-
-document
-    .getElementById(
-        "resignGame"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            if (
-                confirm(
-                    "Are you sure you want to resign?"
-                )
-            ) {
-
-                window.resignGame?.();
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   DRAW
-========================================================= */
-
-document
-    .getElementById(
-        "drawGame"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            if (
-                confirm(
-                    "Offer a draw?"
-                )
-            ) {
-
-                window.offerDraw?.();
-
-            }
-
-        }
-    );
-
-
-/* =========================================================
-   RESULT MODAL
-========================================================= */
-
-document
-    .getElementById(
-        "rematchButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            document
-                .getElementById(
-                    "resultModal"
-                )
-                .classList.add(
-                    "hidden"
-                );
-
-
-            startSelectedGame();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "homeButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            document
-                .getElementById(
-                    "resultModal"
-                )
-                .classList.add(
-                    "hidden"
-                );
-
-
-            openSection(
-                "home"
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   GAME RESULTS
-========================================================= */
-
-function saveGameResult(
-    result
-) {
-
-    const stats =
-        getStats();
-
-
-    stats.games++;
-
-
-    if (
-        result === "win"
-    ) {
-
-        stats.wins++;
-
-    }
-
-    else if (
-        result === "loss"
-    ) {
-
-        stats.losses++;
-
-    }
-
-    else {
-
-        stats.draws++;
-
-    }
-
-
-    saveStats(
-        stats
-    );
-
-
-    updateStatistics();
-
-}
-
-
-window.saveGameResult =
-    saveGameResult;
-
-
-function updateStatistics() {
-
-    const stats =
-        getStats();
-
-
-    document.getElementById(
-        "games"
-    ).textContent =
-        stats.games;
-
-
-    document.getElementById(
-        "wins"
-    ).textContent =
-        stats.wins;
-
-
-    document.getElementById(
-        "losses"
-    ).textContent =
-        stats.losses;
-
-
-    document.getElementById(
-        "draws"
-    ).textContent =
-        stats.draws;
-
-
-    document.getElementById(
-        "homeGames"
-    ).textContent =
-        stats.games;
-
-
-    document.getElementById(
-        "homeWins"
-    ).textContent =
-        stats.wins;
-
-}
-
-
-/* =========================================================
-   DIFFICULTY DISPLAY
-========================================================= */
-
-document
-    .getElementById(
-        "difficulty"
-    )
-    .addEventListener(
-        "change",
-        event => {
-
-            const text =
-                event.target
-                    .options[
-                        event.target.selectedIndex
-                    ]
-                    .textContent;
-
-
-            document.getElementById(
-                "sideDifficulty"
-            ).textContent =
-                text;
-
-
-            document.getElementById(
-                "blackLevel"
-            ).textContent =
-                event.target.value;
-
-        }
-    );
-
-
-/* =========================================================
-   PUZZLES
-========================================================= */
-
-let puzzlesSolved =
-    parseInt(
-        localStorage.getItem(
-            "puzzlesSolved"
-        ) || "0"
-    );
-
-let puzzleStreak =
-    parseInt(
-        localStorage.getItem(
-            "puzzleStreak"
-        ) || "0"
-    );
-
-
-function updatePuzzleStats() {
-
-    document.getElementById(
-        "puzzlesSolved"
-    ).textContent =
-        puzzlesSolved;
-
-
-    document.getElementById(
-        "puzzleStreak"
-    ).textContent =
-        puzzleStreak;
-
-}
-
-
-document
-    .getElementById(
-        "completePuzzle"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            puzzlesSolved++;
-
-            puzzleStreak++;
-
-
-            localStorage.setItem(
-                "puzzlesSolved",
-                puzzlesSolved
-            );
-
-
-            localStorage.setItem(
-                "puzzleStreak",
-                puzzleStreak
-            );
-
-
-            document.getElementById(
-                "puzzleStatus"
-            ).textContent =
-                "✓ Excellent! Puzzle solved.";
-
-
-            updatePuzzleStats();
-
-        }
-    );
 
 
 /* =========================================================
    ACADEMY
 ========================================================= */
 
-const lessons =
-    document.querySelectorAll(
-        ".lesson"
-    );
+const lessons = [
+
+    {
+        title: "The Chess Board",
+        description:
+            "Learn the board, ranks, files, squares and starting position."
+    },
+
+    {
+        title: "How Pieces Move",
+        description:
+            "Learn the movement of the king, queen, rook, bishop, knight and pawn."
+    },
+
+    {
+        title: "Capturing Pieces",
+        description:
+            "Understand how captures work and how to recognize valuable targets."
+    },
+
+    {
+        title: "Check & Checkmate",
+        description:
+            "Learn check, checkmate, escape squares and basic king safety."
+    },
+
+    {
+        title: "Opening Principles",
+        description:
+            "Control the centre, develop pieces and get your king safe."
+    },
+
+    {
+        title: "Piece Value",
+        description:
+            "Understand material values and learn when exchanges are good."
+    },
+
+    {
+        title: "Tactics",
+        description:
+            "Learn forks, pins, skewers, discovered attacks and double attacks."
+    },
+
+    {
+        title: "Chess Strategy",
+        description:
+            "Understand pawn structure, weak squares, outposts and plans."
+    },
+
+    {
+        title: "Endgames",
+        description:
+            "Learn king and pawn endings, opposition and basic rook endings."
+    },
+
+    {
+        title: "Calculation",
+        description:
+            "Learn how strong players calculate variations before moving."
+    },
+
+    {
+        title: "Advanced Strategy",
+        description:
+            "Improve positional understanding and long-term planning."
+    },
+
+    {
+        title: "Master Level",
+        description:
+            "Study advanced calculation, positional play and practical chess."
+    }
+
+];
 
 
-let completedLessons =
-    JSON.parse(
+function getLessonProgress() {
+
+    return JSON.parse(
         localStorage.getItem(
-            "completedLessons"
-        ) || "[]"
+            "chessLessonProgress"
+        ) ||
+        "[]"
     );
 
+}
 
-function updateAcademy() {
+
+function saveLessonProgress(
+    progress
+) {
+
+    localStorage.setItem(
+        "chessLessonProgress",
+        JSON.stringify(
+            progress
+        )
+    );
+
+}
+
+
+function renderLessons() {
+
+    const container =
+        document.getElementById(
+            "lessonContainer"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const progress =
+        getLessonProgress();
+
+
+    container.innerHTML = "";
+
 
     lessons.forEach(
-        lesson => {
+        (
+            lesson,
+            index
+        ) => {
 
-            const id =
-                parseInt(
-                    lesson.dataset.lesson
+            const completed =
+                progress.includes(
+                    index
                 );
 
 
-            if (
-                completedLessons.includes(
-                    id
-                )
-            ) {
-
-                lesson.classList.add(
-                    "completed"
+            const card =
+                document.createElement(
+                    "article"
                 );
 
 
-                lesson.querySelector(
+            card.className =
+                "lesson" +
+                (
+                    completed
+                        ? " completed"
+                        : ""
+                );
+
+
+            card.innerHTML = `
+
+                <div class="lesson-number">
+                    LESSON ${String(index + 1).padStart(2, "0")}
+                </div>
+
+                <h3>
+                    ${lesson.title}
+                </h3>
+
+                <p>
+                    ${lesson.description}
+                </p>
+
+                <button>
+                    ${
+                        completed
+                            ? "✓ Completed"
+                            : "Mark Complete"
+                    }
+                </button>
+
+            `;
+
+
+            card
+                .querySelector(
                     "button"
-                ).textContent =
-                    "✓ Completed";
+                )
+                .addEventListener(
+                    "click",
+                    () => {
 
-            }
+                        const current =
+                            getLessonProgress();
+
+
+                        if (
+                            current.includes(
+                                index
+                            )
+                        ) {
+
+                            return;
+
+                        }
+
+
+                        current.push(
+                            index
+                        );
+
+
+                        saveLessonProgress(
+                            current
+                        );
+
+
+                        renderLessons();
+
+                        updateAcademyProgress();
+
+                    }
+                );
+
+
+            container.appendChild(
+                card
+            );
 
         }
     );
+
+}
+
+
+function updateAcademyProgress() {
+
+    const completed =
+        getLessonProgress()
+            .length;
 
 
     const percentage =
         Math.round(
             (
-                completedLessons.length /
+                completed /
                 lessons.length
             ) * 100
         );
 
 
-    document.getElementById(
-        "academyProgressText"
-    ).textContent =
-        percentage + "%";
+    const progress =
+        document.getElementById(
+            "academyProgress"
+        );
 
 
-    document.getElementById(
-        "academyProgressBar"
-    ).style.width =
-        percentage + "%";
+    const text =
+        document.getElementById(
+            "academyProgressText"
+        );
 
 
-    document.getElementById(
-        "homeAcademy"
-    ).textContent =
-        percentage + "%";
+    if (progress) {
+
+        progress.style.width =
+            `${percentage}%`;
+
+    }
+
+
+    if (text) {
+
+        text.textContent =
+            `${percentage}%`;
+
+    }
 
 }
 
 
-lessons.forEach(
-    lesson => {
-
-        lesson.querySelector(
-            "button"
-        ).addEventListener(
-            "click",
-            () => {
-
-                const id =
-                    parseInt(
-                        lesson.dataset.lesson
-                    );
-
-
-                if (
-                    !completedLessons.includes(
-                        id
-                    )
-                ) {
-
-                    completedLessons.push(
-                        id
-                    );
-
-
-                    localStorage.setItem(
-                        "completedLessons",
-                        JSON.stringify(
-                            completedLessons
-                        )
-                    );
-
-                }
-
-
-                updateAcademy();
-
-            }
-        );
-
-    }
-);
-
-
 /* =========================================================
-   SETTINGS
-========================================================= */
-
-document
-    .getElementById(
-        "coordinatesToggle"
-    )
-    .addEventListener(
-        "change",
-        event => {
-
-            document.body.classList.toggle(
-                "hide-coordinates",
-                !event.target.checked
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "animationToggle"
-    )
-    .addEventListener(
-        "change",
-        event => {
-
-            document.body.classList.toggle(
-                "no-animation",
-                !event.target.checked
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   PWA
+   PWA INSTALL
 ========================================================= */
 
 let deferredInstallPrompt = null;
@@ -1156,83 +859,69 @@ window.addEventListener(
             event;
 
 
-        document
-            .getElementById(
+        const button =
+            document.getElementById(
                 "installButton"
-            )
-            .classList.remove(
-                "hidden"
             );
+
+
+        if (button) {
+
+            button.style.display =
+                "block";
+
+        }
 
     }
 );
 
 
-document
-    .getElementById(
-        "installButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
+document.getElementById(
+    "installButton"
+)?.addEventListener(
+    "click",
+    async () => {
 
-            if (
-                !deferredInstallPrompt
-            ) return;
-
-
-            deferredInstallPrompt.prompt();
-
-
-            await deferredInstallPrompt.userChoice;
-
-
-            deferredInstallPrompt =
-                null;
-
-
-            document
-                .getElementById(
-                    "installButton"
-                )
-                .classList.add(
-                    "hidden"
-                );
-
+        if (
+            !deferredInstallPrompt
+        ) {
+            return;
         }
-    );
 
 
-if (
-    "serviceWorker" in navigator
-) {
+        deferredInstallPrompt.prompt();
 
-    window.addEventListener(
-        "load",
-        () => {
 
-            navigator.serviceWorker.register(
-                "/static/service-worker.js"
-            );
+        await deferredInstallPrompt
+            .userChoice;
 
-        }
-    );
 
-}
+        deferredInstallPrompt =
+            null;
+
+
+        document.getElementById(
+            "installButton"
+        ).style.display =
+            "none";
+
+    }
+);
 
 
 /* =========================================================
-   START
+   START APPLICATION
 ========================================================= */
 
-updateStatistics();
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-updatePuzzleStats();
+        renderLessons();
 
-updateAcademy();
+        updateAcademyProgress();
 
-resetChessClock();
+        updateClockDisplay();
 
-renderClocks();
-
-updateActiveClock();
+    }
+);
