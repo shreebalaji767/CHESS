@@ -1,73 +1,50 @@
 /* =========================================================
-   MAIN APPLICATION
+   CHESS ACADEMY APPLICATION
 ========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        App.init();
-
-    }
-);
-
 
 const App = {
 
-    boardElement: null,
-
-    playerColor: "w",
-
-    difficulty: 3,
-
     boardFlipped: false,
 
-    gameRunning: false,
+    selectedSquare: null,
 
-    aiThinking: false,
+    gameStarted: false,
+
+    gameOver: false,
+
+    currentClock: null,
+
+    playerTime: 600,
+
+    computerTime: 600,
 
     moveHistory: [],
 
     capturedWhite: [],
-
     capturedBlack: [],
 
-    stats: {
-        games: 0,
-        wins: 0,
-        losses: 0,
-        draws: 0
-    },
+    installPrompt: null,
 
-    clocks: {
-        w: 600,
-        b: 600
-    },
 
-    clockInterval: null,
-
-    activeClock: "w",
-
-    deferredInstallPrompt: null,
-
+    /* =====================================================
+       INITIALIZE
+    ===================================================== */
 
     init() {
-
-        this.boardElement =
-            document.getElementById(
-                "chessBoard"
-            );
 
         this.loadStats();
 
         this.bindNavigation();
 
+        this.bindHomeButtons();
+
         this.bindGameControls();
 
-        this.bindInstall();
+        this.bindPWA();
 
-        this.startNewGame();
+        this.showSection("home");
 
+        this.resetGameDisplay();
     },
 
 
@@ -77,63 +54,126 @@ const App = {
 
     bindNavigation() {
 
-        const buttons =
-            document.querySelectorAll(
-                ".nav-button"
+        document.querySelectorAll(".nav-button").forEach(button => {
+
+            button.addEventListener("click", () => {
+
+                const section = button.dataset.section;
+
+                this.showSection(section);
+
+            });
+
+        });
+
+
+        const logo = document.getElementById("homeLogo");
+
+        if (logo) {
+
+            logo.addEventListener("click", () => {
+
+                this.stopClock();
+
+                this.showSection("home");
+
+            });
+
+        }
+
+    },
+
+
+    bindHomeButtons() {
+
+        const play = document.getElementById("homePlayGame");
+
+        if (play) {
+
+            play.addEventListener("click", () => {
+
+                this.showSection("play");
+
+            });
+
+        }
+
+
+        const academy = document.getElementById("homeAcademy");
+
+        if (academy) {
+
+            academy.addEventListener("click", () => {
+
+                this.showSection("academy");
+
+            });
+
+        }
+
+
+        const gameHome = document.getElementById("gameHome");
+
+        if (gameHome) {
+
+            gameHome.addEventListener("click", () => {
+
+                this.stopClock();
+
+                this.showSection("home");
+
+            });
+
+        }
+
+
+        const academyHome = document.getElementById("academyHome");
+
+        if (academyHome) {
+
+            academyHome.addEventListener("click", () => {
+
+                this.showSection("home");
+
+            });
+
+        }
+
+    },
+
+
+    showSection(sectionName) {
+
+        document.querySelectorAll(".section").forEach(section => {
+
+            section.classList.remove("active");
+
+        });
+
+
+        const section = document.getElementById(sectionName);
+
+        if (section) {
+
+            section.classList.add("active");
+
+        }
+
+
+        document.querySelectorAll(".nav-button").forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.section === sectionName
             );
 
-        buttons.forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        const section =
-                            button.dataset.section;
-
-                        buttons.forEach(
-                            item =>
-                                item.classList.remove(
-                                    "active"
-                                )
-                        );
-
-                        button.classList.add(
-                            "active"
-                        );
+        });
 
 
-                        document
-                            .querySelectorAll(
-                                ".section"
-                            )
-                            .forEach(
-                                item =>
-                                    item.classList.remove(
-                                        "active"
-                                    )
-                            );
-
-
-                        const target =
-                            document.getElementById(
-                                section
-                            );
-
-                        if (target) {
-
-                            target.classList.add(
-                                "active"
-                            );
-
-                        }
-
-                    }
-                );
-
-            }
-        );
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
 
     },
 
@@ -144,99 +184,101 @@ const App = {
 
     bindGameControls() {
 
-        document
-            .getElementById("startGame")
-            .addEventListener(
-                "click",
-                () => {
+        const startGame = document.getElementById("startGame");
 
-                    this.startNewGame();
+        if (startGame) {
 
-                }
-            );
+            startGame.addEventListener("click", () => {
 
+                this.startNewGame();
 
-        document
-            .getElementById("newGame")
-            .addEventListener(
-                "click",
-                () => {
+            });
 
-                    this.startNewGame();
-
-                }
-            );
+        }
 
 
-        document
-            .getElementById("undoMove")
-            .addEventListener(
-                "click",
-                () => {
+        const newGame = document.getElementById("newGame");
 
-                    this.undo();
+        if (newGame) {
 
-                }
-            );
+            newGame.addEventListener("click", () => {
+
+                this.startNewGame();
+
+            });
+
+        }
 
 
-        document
-            .getElementById("resignGame")
-            .addEventListener(
-                "click",
-                () => {
+        const undo = document.getElementById("undoMove");
 
-                    this.resign();
+        if (undo) {
 
-                }
-            );
+            undo.addEventListener("click", () => {
+
+                this.undo();
+
+            });
+
+        }
+
+
+        const resign = document.getElementById("resignGame");
+
+        if (resign) {
+
+            resign.addEventListener("click", () => {
+
+                this.resign();
+
+            });
+
+        }
 
     },
 
 
     /* =====================================================
-       NEW GAME
+       START GAME
     ===================================================== */
 
     startNewGame() {
 
+        const colorElement =
+            document.getElementById("playerColor");
+
+        const difficultyElement =
+            document.getElementById("difficulty");
+
+
+        const playerColor =
+            colorElement ? colorElement.value : "w";
+
+        const difficulty =
+            difficultyElement
+                ? Number(difficultyElement.value)
+                : 3;
+
+
         this.stopClock();
 
-        const colorSelect =
-            document.getElementById(
-                "playerColor"
-            );
 
-        const difficultySelect =
-            document.getElementById(
-                "difficulty"
-            );
+        ChessGame.init(playerColor);
+
+        ChessGame.difficulty = difficulty;
 
 
-        this.playerColor =
-            colorSelect.value;
+        this.boardFlipped = playerColor === "b";
 
-        this.difficulty =
-            Number(
-                difficultySelect.value
-            );
+        this.gameStarted = true;
 
+        this.gameOver = false;
 
-        /*
-         * THIS IS THE IMPORTANT FIX:
-         *
-         * The selected player color is passed
-         * directly into the chess engine.
-         */
+        this.selectedSquare = null;
 
-        ChessGame.init(
-            this.playerColor
-        );
+        this.playerTime = 600;
 
-
-        this.gameRunning = true;
-
-        this.aiThinking = false;
+        this.computerTime = 600;
 
         this.moveHistory = [];
 
@@ -244,99 +286,39 @@ const App = {
 
         this.capturedBlack = [];
 
-        this.clocks.w = 600;
 
-        this.clocks.b = 600;
-
-        this.activeClock = "w";
-
-
-        /*
-         * Flip board when user chooses Black.
-         */
-
-        this.boardFlipped =
-            this.playerColor === "b";
-
-
-        this.updatePlayerLabels();
+        this.updatePlayerLabels(playerColor);
 
         this.renderBoard();
 
         this.renderMoves();
 
-        this.updateMaterial();
+        this.renderCapturedPieces();
 
-        this.updateStatus();
+        this.updateMaterial();
 
         this.updateClocks();
 
-        this.startClock();
+        this.updateStatus();
 
 
-        /*
-         * If user selected BLACK,
-         * computer is WHITE and must move first.
-         */
+        if (playerColor === "b") {
 
-        if (
-            this.playerColor === "b"
-        ) {
+            this.switchClock("computer");
 
-            this.setStatus(
-                "Computer is thinking..."
-            );
+            setTimeout(() => {
 
-            this.aiThinking = true;
-
-            setTimeout(
-                () => {
+                if (!this.gameOver) {
 
                     this.computerMove();
 
-                },
-                600
-            );
+                }
 
-        }
-
-    },
-
-
-    /* =====================================================
-       LABELS
-    ===================================================== */
-
-    updatePlayerLabels() {
-
-        const playerLabel =
-            document.getElementById(
-                "playerLabel"
-            );
-
-        const computerLabel =
-            document.getElementById(
-                "computerLabel"
-            );
-
-
-        if (
-            this.playerColor === "w"
-        ) {
-
-            playerLabel.textContent =
-                "White";
-
-            computerLabel.textContent =
-                "Black • Computer";
+            }, 600);
 
         } else {
 
-            playerLabel.textContent =
-                "Black";
-
-            computerLabel.textContent =
-                "White • Computer";
+            this.switchClock("player");
 
         }
 
@@ -344,520 +326,473 @@ const App = {
 
 
     /* =====================================================
-       BOARD
+       PLAYER LABELS
+    ===================================================== */
+
+    updatePlayerLabels(playerColor) {
+
+        const playerLabel =
+            document.getElementById("playerLabel");
+
+        const computerLabel =
+            document.getElementById("computerLabel");
+
+
+        const playerSide =
+            playerLabel
+                ? playerLabel.parentElement.querySelector(".player-side")
+                : null;
+
+
+        const computerSide =
+            computerLabel
+                ? computerLabel.parentElement.querySelector(".player-side")
+                : null;
+
+
+        if (playerColor === "w") {
+
+            if (playerLabel) {
+                playerLabel.textContent = "YOU";
+            }
+
+            if (playerSide) {
+                playerSide.textContent = "WHITE";
+            }
+
+            if (computerLabel) {
+                computerLabel.textContent = "COMPUTER";
+            }
+
+            if (computerSide) {
+                computerSide.textContent = "BLACK";
+            }
+
+        } else {
+
+            if (playerLabel) {
+                playerLabel.textContent = "YOU";
+            }
+
+            if (playerSide) {
+                playerSide.textContent = "BLACK";
+            }
+
+            if (computerLabel) {
+                computerLabel.textContent = "COMPUTER";
+            }
+
+            if (computerSide) {
+                computerSide.textContent = "WHITE";
+            }
+
+        }
+
+    },
+
+
+    /* =====================================================
+       BOARD RENDER
     ===================================================== */
 
     renderBoard() {
 
-        this.boardElement.innerHTML = "";
+        const boardElement =
+            document.getElementById("chessBoard");
 
-
-        let rows = [
-            0, 1, 2, 3, 4, 5, 6, 7
-        ];
-
-        let cols = [
-            0, 1, 2, 3, 4, 5, 6, 7
-        ];
-
-
-        if (
-            this.boardFlipped
-        ) {
-
-            rows.reverse();
-
-            cols.reverse();
-
+        if (!boardElement) {
+            return;
         }
 
 
+        boardElement.innerHTML = "";
+
+
+        const board = ChessGame.board;
+
+        const rows = this.boardFlipped
+            ? [7, 6, 5, 4, 3, 2, 1, 0]
+            : [0, 1, 2, 3, 4, 5, 6, 7];
+
+
+        const cols = this.boardFlipped
+            ? [7, 6, 5, 4, 3, 2, 1, 0]
+            : [0, 1, 2, 3, 4, 5, 6, 7];
+
+
+        const lastMove =
+            ChessGame.history.length
+                ? ChessGame.history[ChessGame.history.length - 1]
+                : null;
+
+
         const legalMoves =
-            ChessGame.getLegalMoves(
-                ChessGame.turn
-            );
+            this.selectedSquare !== null
+                ? ChessGame.getLegalMovesFrom(this.selectedSquare)
+                : [];
 
 
-        for (
-            const r of rows
-        ) {
+        rows.forEach((row, displayRow) => {
 
-            for (
-                const c of cols
-            ) {
+            cols.forEach((col, displayCol) => {
 
                 const square =
-                    document.createElement(
-                        "div"
-                    );
+                    document.createElement("div");
+
+                square.className = "square";
 
 
-                square.className =
-                    "square " +
-                    (
-                        (r + c) % 2 === 0
-                            ? "light-square"
-                            : "dark-square"
-                    );
+                const isLight =
+                    (row + col) % 2 === 0;
 
 
-                square.dataset.row = r;
-
-                square.dataset.col = c;
-
-
-                /*
-                 * Coordinates
-                 */
-
-                const file =
-                    document.createElement(
-                        "span"
-                    );
-
-                file.className =
-                    "coordinate-file";
-
-                file.textContent =
-                    FILES_SAFE[c];
-
-
-                const rank =
-                    document.createElement(
-                        "span"
-                    );
-
-                rank.className =
-                    "coordinate-rank";
-
-                rank.textContent =
-                    8 - r;
-
-
-                square.appendChild(
-                    file
-                );
-
-                square.appendChild(
-                    rank
+                square.classList.add(
+                    isLight
+                        ? "light-square"
+                        : "dark-square"
                 );
 
 
-                /*
-                 * Selected
-                 */
+                const squareIndex =
+                    row * 8 + col;
+
+
+                square.dataset.index =
+                    squareIndex;
+
 
                 if (
-                    ChessGame.selected &&
-                    ChessGame.selected.r === r &&
-                    ChessGame.selected.c === c
+                    this.selectedSquare === squareIndex
                 ) {
 
-                    square.classList.add(
-                        "selected"
-                    );
+                    square.classList.add("selected");
 
                 }
 
 
-                /*
-                 * Last move
-                 */
-
-                const last =
-                    ChessGame.history[
-                        ChessGame.history.length - 1
-                    ];
-
-
-                if (last) {
+                if (lastMove) {
 
                     if (
-                        (
-                            last.move.from.r === r &&
-                            last.move.from.c === c
-                        ) ||
-                        (
-                            last.move.to.r === r &&
-                            last.move.to.c === c
-                        )
+                        lastMove.from === squareIndex ||
+                        lastMove.to === squareIndex
                     ) {
 
+                        square.classList.add("last-move");
+
+                    }
+
+                }
+
+
+                const legal =
+                    legalMoves.some(
+                        move => move.to === squareIndex
+                    );
+
+
+                if (legal) {
+
+                    if (board[row][col]) {
+
                         square.classList.add(
-                            "last-move"
+                            "capture-move"
+                        );
+
+                    } else {
+
+                        square.classList.add(
+                            "legal-move"
                         );
 
                     }
 
                 }
 
-
-                /*
-                 * Legal destination
-                 */
-
-                if (
-                    ChessGame.selected
-                ) {
-
-                    const possible =
-                        legalMoves.some(
-                            move =>
-                                move.from.r ===
-                                    ChessGame.selected.r &&
-                                move.from.c ===
-                                    ChessGame.selected.c &&
-                                move.to.r === r &&
-                                move.to.c === c
-                        );
-
-
-                    if (possible) {
-
-                        if (
-                            ChessGame.board[r][c]
-                        ) {
-
-                            square.classList.add(
-                                "capture-move"
-                            );
-
-                        } else {
-
-                            square.classList.add(
-                                "legal-move"
-                            );
-
-                        }
-
-                    }
-
-                }
-
-
-                /*
-                 * Piece
-                 */
 
                 const piece =
-                    ChessGame.board[r][c];
+                    board[row][col];
 
 
                 if (piece) {
 
                     const pieceElement =
-                        document.createElement(
-                            "span"
-                        );
+                        document.createElement("span");
 
                     pieceElement.className =
-                        "piece " +
-                        (
-                            ChessGame.colorOf(piece)
-                                === "w"
-                                ? "white-piece"
-                                : "black-piece"
-                        );
+                        "piece";
+
+
+                    const isWhite =
+                        piece === piece.toUpperCase();
+
+
+                    pieceElement.classList.add(
+                        isWhite
+                            ? "white-piece"
+                            : "black-piece"
+                    );
 
 
                     pieceElement.textContent =
-                        ChessGame.colorOf(piece)
-                            === "w"
-                            ? PIECES.w[
-                                piece.toLowerCase()
-                            ]
-                            : PIECES.b[
-                                piece.toLowerCase()
-                            ];
+                        PIECES[piece];
 
 
-                    square.appendChild(
-                        pieceElement
-                    );
+                    square.appendChild(pieceElement);
+
+                }
+
+
+                /* FILE COORDINATES */
+
+                if (displayRow === 7) {
+
+                    const file =
+                        document.createElement("span");
+
+                    file.className =
+                        "coordinate file-coordinate";
+
+
+                    const fileNumber =
+                        this.boardFlipped
+                            ? 7 - col
+                            : col;
+
+
+                    file.textContent =
+                        String.fromCharCode(
+                            97 + fileNumber
+                        );
+
+
+                    square.appendChild(file);
+
+                }
+
+
+                /* RANK COORDINATES */
+
+                if (displayCol === 0) {
+
+                    const rank =
+                        document.createElement("span");
+
+                    rank.className =
+                        "coordinate rank-coordinate";
+
+
+                    const rankNumber =
+                        this.boardFlipped
+                            ? row + 1
+                            : 8 - row;
+
+
+                    rank.textContent =
+                        rankNumber;
+
+
+                    square.appendChild(rank);
 
                 }
 
 
                 square.addEventListener(
                     "click",
-                    () => {
-
-                        this.handleSquareClick(
-                            r,
-                            c
-                        );
-
-                    }
+                    () => this.handleSquareClick(squareIndex)
                 );
 
 
-                this.boardElement.appendChild(
-                    square
-                );
+                boardElement.appendChild(square);
 
-            }
+            });
 
-        }
+        });
 
     },
 
 
     /* =====================================================
-       CLICK
+       SQUARE CLICK
     ===================================================== */
 
-    handleSquareClick(r, c) {
+    handleSquareClick(index) {
 
-        if (
-            !this.gameRunning ||
-            this.aiThinking ||
-            ChessGame.gameOver
-        ) {
+        if (!this.gameStarted || this.gameOver) {
             return;
         }
 
 
-        /*
-         * User can only move their own pieces.
-         */
-
         if (
-            ChessGame.turn !==
-            this.playerColor
+            ChessGame.turn !== ChessGame.playerColor
         ) {
+
             return;
+
         }
+
+
+        const row =
+            Math.floor(index / 8);
+
+        const col =
+            index % 8;
 
 
         const piece =
-            ChessGame.board[r][c];
+            ChessGame.board[row][col];
 
 
-        /*
-         * If nothing selected
-         */
+        if (this.selectedSquare !== null) {
 
-        if (
-            !ChessGame.selected
-        ) {
+            const legalMoves =
+                ChessGame.getLegalMovesFrom(
+                    this.selectedSquare
+                );
 
-            if (
-                piece &&
-                ChessGame.colorOf(piece) ===
-                    this.playerColor
-            ) {
 
-                ChessGame.selected = {
-                    r,
-                    c
-                };
+            const selectedMove =
+                legalMoves.find(
+                    move => move.to === index
+                );
 
-                this.renderBoard();
+
+            if (selectedMove) {
+
+                this.performMove(
+                    this.selectedSquare,
+                    index
+                );
+
+                return;
 
             }
 
-            return;
+        }
+
+
+        if (piece) {
+
+            const isWhite =
+                piece === piece.toUpperCase();
+
+
+            const playerOwnsPiece =
+                (
+                    ChessGame.playerColor === "w" &&
+                    isWhite
+                ) ||
+                (
+                    ChessGame.playerColor === "b" &&
+                    !isWhite
+                );
+
+
+            if (playerOwnsPiece) {
+
+                if (
+                    this.selectedSquare === index
+                ) {
+
+                    this.selectedSquare = null;
+
+                } else {
+
+                    this.selectedSquare = index;
+
+                }
+
+                this.renderBoard();
+
+                return;
+
+            }
 
         }
 
 
-        /*
-         * Click same square
-         */
+        this.selectedSquare = null;
 
-        if (
-            ChessGame.selected.r === r &&
-            ChessGame.selected.c === c
-        ) {
-
-            ChessGame.selected = null;
-
-            this.renderBoard();
-
-            return;
-
-        }
-
-
-        /*
-         * Select another own piece
-         */
-
-        if (
-            piece &&
-            ChessGame.colorOf(piece) ===
-                this.playerColor
-        ) {
-
-            ChessGame.selected = {
-                r,
-                c
-            };
-
-            this.renderBoard();
-
-            return;
-
-        }
-
-
-        /*
-         * Find legal move
-         */
-
-        const legalMoves =
-            ChessGame.getLegalMoves(
-                ChessGame.turn
-            );
-
-
-        const move =
-            legalMoves.find(
-                item =>
-                    item.from.r ===
-                        ChessGame.selected.r &&
-                    item.from.c ===
-                        ChessGame.selected.c &&
-                    item.to.r === r &&
-                    item.to.c === c
-            );
-
-
-        if (!move) {
-
-            this.setStatus(
-                "That move is not legal."
-            );
-
-            return;
-
-        }
-
-
-        this.performMove(
-            move,
-            true
-        );
+        this.renderBoard();
 
     },
 
 
     /* =====================================================
-       PERFORM MOVE
+       MAKE MOVE
     ===================================================== */
 
-    performMove(
-        move,
-        isHuman = false
-    ) {
+    performMove(from, to) {
 
-        const beforeBoard =
-            ChessGame.cloneBoard(
-                ChessGame.board
-            );
+        const beforePiece =
+            ChessGame.board[
+                Math.floor(from / 8)
+            ][from % 8];
 
 
-        const captured =
-            move.enPassant
-                ? ChessGame.board[
-                    move.from.r
-                ][
-                    move.to.c
-                ]
-                : ChessGame.board[
-                    move.to.r
-                ][
-                    move.to.c
-                ];
+        const targetPiece =
+            ChessGame.board[
+                Math.floor(to / 8)
+            ][to % 8];
 
 
         const notation =
             ChessGame.moveNotation(
-                move,
-                beforeBoard
+                from,
+                to,
+                targetPiece
             );
 
 
-        const piece =
-            beforeBoard[
-                move.from.r
-            ][
-                move.from.c
-            ];
+        const success =
+            ChessGame.makeMove(from, to);
 
 
-        ChessGame.makeMove(
-            move
-        );
+        if (!success) {
+
+            return;
+
+        }
 
 
-        /*
-         * Save move
-         */
-
-        this.moveHistory.push({
-            color:
-                ChessGame.opposite(
-                    ChessGame.turn
-                ),
-
-            notation
-        });
-
-
-        /*
-         * Captured material
-         */
-
-        if (captured) {
-
-            const capturedColor =
-                ChessGame.colorOf(
-                    captured
-                );
+        if (targetPiece) {
 
             if (
-                capturedColor === "w"
+                targetPiece ===
+                targetPiece.toUpperCase()
             ) {
 
                 this.capturedWhite.push(
-                    captured
+                    targetPiece
                 );
 
             } else {
 
                 this.capturedBlack.push(
-                    captured
+                    targetPiece
                 );
 
             }
 
         }
+
+
+        this.moveHistory.push(notation);
+
+        this.selectedSquare = null;
 
 
         this.renderBoard();
 
         this.renderMoves();
 
+        this.renderCapturedPieces();
+
         this.updateMaterial();
 
         this.updateStatus();
 
 
-        /*
-         * Switch clock
-         */
-
-        this.switchClock();
-
-
-        /*
-         * Game over?
-         */
-
-        if (
-            ChessGame.gameOver
-        ) {
+        if (ChessGame.isGameOver()) {
 
             this.finishGame();
 
@@ -866,36 +801,26 @@ const App = {
         }
 
 
-        /*
-         * Computer turn
-         */
+        this.switchClock(
+            ChessGame.turn === ChessGame.playerColor
+                ? "player"
+                : "computer"
+        );
+
 
         if (
-            ChessGame.turn ===
-            ChessGame.computerColor
+            ChessGame.turn !== ChessGame.playerColor
         ) {
 
-            this.aiThinking = true;
+            setTimeout(() => {
 
-            this.setStatus(
-                "Computer is thinking..."
-            );
-
-
-            setTimeout(
-                () => {
+                if (!this.gameOver) {
 
                     this.computerMove();
 
-                },
-                350
-            );
+                }
 
-        } else {
-
-            this.setStatus(
-                "Your turn"
-            );
+            }, 450);
 
         }
 
@@ -903,256 +828,122 @@ const App = {
 
 
     /* =====================================================
-       COMPUTER
+       COMPUTER MOVE
     ===================================================== */
 
     computerMove() {
 
-        if (
-            !this.gameRunning ||
-            ChessGame.gameOver
-        ) {
+        if (this.gameOver) {
+            return;
+        }
 
-            this.aiThinking = false;
+
+        if (
+            ChessGame.turn === ChessGame.playerColor
+        ) {
 
             return;
 
         }
 
 
-        if (
-            ChessGame.turn !==
-            ChessGame.computerColor
-        ) {
-
-            this.aiThinking = false;
-
-            return;
-
-        }
+        const difficultyElement =
+            document.getElementById("difficulty");
 
 
-        const move =
+        const difficulty =
+            difficultyElement
+                ? Number(difficultyElement.value)
+                : 3;
+
+
+        let move =
             ChessGame.findBestMove(
-                this.difficulty
+                difficulty
             );
 
 
         if (!move) {
 
-            this.aiThinking = false;
-
-            this.updateStatus();
+            this.finishGame();
 
             return;
 
         }
 
 
-        this.performMove(
-            move,
-            false
-        );
+        const targetPiece =
+            ChessGame.board[
+                Math.floor(move.to / 8)
+            ][move.to % 8];
 
 
-        this.aiThinking = false;
+        const notation =
+            ChessGame.moveNotation(
+                move.from,
+                move.to,
+                targetPiece
+            );
 
-    },
+
+        const success =
+            ChessGame.makeMove(
+                move.from,
+                move.to
+            );
 
 
-    /* =====================================================
-       UNDO
-    ===================================================== */
-
-    undo() {
-
-        if (
-            !this.gameRunning ||
-            this.aiThinking
-        ) {
+        if (!success) {
             return;
         }
 
 
-        /*
-         * Undo user's move + computer move.
-         */
+        if (targetPiece) {
 
-        if (
-            ChessGame.history.length === 0
-        ) {
-            return;
-        }
+            if (
+                targetPiece ===
+                targetPiece.toUpperCase()
+            ) {
 
-
-        if (
-            ChessGame.history.length >= 2
-        ) {
-
-            ChessGame.undo();
-
-            ChessGame.undo();
-
-            this.moveHistory =
-                this.moveHistory.slice(
-                    0,
-                    Math.max(
-                        0,
-                        this.moveHistory.length - 2
-                    )
+                this.capturedWhite.push(
+                    targetPiece
                 );
 
-        } else {
+            } else {
 
-            ChessGame.undo();
+                this.capturedBlack.push(
+                    targetPiece
+                );
 
-            this.moveHistory.pop();
+            }
 
         }
 
 
-        ChessGame.gameOver = false;
+        this.moveHistory.push(notation);
 
-        this.aiThinking = false;
 
         this.renderBoard();
 
         this.renderMoves();
 
+        this.renderCapturedPieces();
+
         this.updateMaterial();
 
         this.updateStatus();
 
-    },
 
+        if (ChessGame.isGameOver()) {
 
-    /* =====================================================
-       RESIGN
-    ===================================================== */
-
-    resign() {
-
-        if (
-            !this.gameRunning ||
-            ChessGame.gameOver
-        ) {
-            return;
-        }
-
-
-        ChessGame.gameOver = true;
-
-        ChessGame.winner =
-            ChessGame.computerColor;
-
-
-        this.setStatus(
-            "You resigned. Computer wins."
-        );
-
-        this.finishGame();
-
-    },
-
-
-    /* =====================================================
-       STATUS
-    ===================================================== */
-
-    updateStatus() {
-
-        if (
-            ChessGame.gameOver
-        ) {
-
-            if (
-                ChessGame.winner ===
-                "draw"
-            ) {
-
-                this.setStatus(
-                    "Draw — stalemate."
-                );
-
-            } else if (
-                ChessGame.winner ===
-                this.playerColor
-            ) {
-
-                this.setStatus(
-                    "Checkmate — you win!"
-                );
-
-            } else {
-
-                this.setStatus(
-                    "Checkmate — computer wins."
-                );
-
-            }
+            this.finishGame();
 
             return;
 
         }
 
 
-        if (
-            ChessGame.isInCheck(
-                ChessGame.board,
-                ChessGame.turn
-            )
-        ) {
-
-            if (
-                ChessGame.turn ===
-                this.playerColor
-            ) {
-
-                this.setStatus(
-                    "Check! Your king is under attack."
-                );
-
-            } else {
-
-                this.setStatus(
-                    "Computer is in check."
-                );
-
-            }
-
-            return;
-
-        }
-
-
-        if (
-            ChessGame.turn ===
-            this.playerColor
-        ) {
-
-            this.setStatus(
-                "Your turn"
-            );
-
-        } else {
-
-            this.setStatus(
-                "Computer's turn"
-            );
-
-        }
-
-    },
-
-
-    setStatus(text) {
-
-        const element =
-            document.getElementById(
-                "gameStatus"
-            );
-
-        element.textContent = text;
+        this.switchClock("player");
 
     },
 
@@ -1169,19 +960,24 @@ const App = {
             );
 
 
+        if (!container) {
+            return;
+        }
+
+
         container.innerHTML = "";
 
 
-        if (
-            this.moveHistory.length === 0
-        ) {
+        if (!this.moveHistory.length) {
 
-            container.innerHTML =
-                `
+            container.innerHTML = `
                 <div class="empty-moves">
-                    No moves yet
+                    <span>♟</span>
+                    <p>Your moves will appear here.</p>
                 </div>
-                `;
+            `;
+
+            this.updateMoveCount();
 
             return;
 
@@ -1195,54 +991,62 @@ const App = {
         ) {
 
             const row =
-                document.createElement(
-                    "div"
-                );
+                document.createElement("div");
 
             row.className =
                 "move-row";
 
 
             const number =
-                document.createElement(
-                    "span"
-                );
+                document.createElement("span");
 
             number.className =
                 "move-number";
 
             number.textContent =
-                (
-                    Math.floor(i / 2) + 1
-                ) + ".";
+                `${Math.floor(i / 2) + 1}.`;
 
 
             const white =
-                document.createElement(
-                    "span"
-                );
+                document.createElement("span");
 
             white.className =
-                "move-white";
-
-            white.textContent =
-                this.moveHistory[i]
-                    ? this.moveHistory[i].notation
-                    : "";
+                "move-cell";
 
 
             const black =
-                document.createElement(
-                    "span"
-                );
+                document.createElement("span");
 
             black.className =
-                "move-black";
+                "move-cell";
+
+
+            white.textContent =
+                this.moveHistory[i] || "";
+
 
             black.textContent =
-                this.moveHistory[i + 1]
-                    ? this.moveHistory[i + 1].notation
-                    : "";
+                this.moveHistory[i + 1] || "";
+
+
+            if (
+                i ===
+                this.moveHistory.length - 1
+            ) {
+
+                white.classList.add("current");
+
+            }
+
+
+            if (
+                i + 1 ===
+                this.moveHistory.length - 1
+            ) {
+
+                black.classList.add("current");
+
+            }
 
 
             row.appendChild(number);
@@ -1255,8 +1059,140 @@ const App = {
 
         }
 
+
         container.scrollTop =
             container.scrollHeight;
+
+
+        this.updateMoveCount();
+
+    },
+
+
+    updateMoveCount() {
+
+        const element =
+            document.getElementById("moveCount");
+
+
+        if (!element) {
+            return;
+        }
+
+
+        const count =
+            this.moveHistory.length;
+
+
+        element.textContent =
+            `${count} ${count === 1 ? "MOVE" : "MOVES"}`;
+
+    },
+
+
+    /* =====================================================
+       CAPTURED PIECES
+    ===================================================== */
+
+    renderCapturedPieces() {
+
+        const playerContainer =
+            document.getElementById(
+                "playerCaptured"
+            );
+
+
+        const computerContainer =
+            document.getElementById(
+                "computerCaptured"
+            );
+
+
+        if (!playerContainer || !computerContainer) {
+            return;
+        }
+
+
+        playerContainer.innerHTML = "";
+
+        computerContainer.innerHTML = "";
+
+
+        const playerColor =
+            ChessGame.playerColor;
+
+
+        let playerCaptured;
+        let computerCaptured;
+
+
+        if (playerColor === "w") {
+
+            playerCaptured =
+                this.capturedBlack;
+
+            computerCaptured =
+                this.capturedWhite;
+
+        } else {
+
+            playerCaptured =
+                this.capturedWhite;
+
+            computerCaptured =
+                this.capturedBlack;
+
+        }
+
+
+        playerCaptured.forEach(
+            piece => {
+
+                playerContainer.appendChild(
+                    this.createCapturedPiece(piece)
+                );
+
+            }
+        );
+
+
+        computerCaptured.forEach(
+            piece => {
+
+                computerContainer.appendChild(
+                    this.createCapturedPiece(piece)
+                );
+
+            }
+        );
+
+    },
+
+
+    createCapturedPiece(piece) {
+
+        const span =
+            document.createElement("span");
+
+
+        span.className =
+            "captured-piece";
+
+
+        const white =
+            piece === piece.toUpperCase();
+
+
+        span.classList.add(
+            white ? "white" : "black"
+        );
+
+
+        span.textContent =
+            PIECES[piece];
+
+
+        return span;
 
     },
 
@@ -1266,6 +1202,55 @@ const App = {
     ===================================================== */
 
     updateMaterial() {
+
+        const element =
+            document.getElementById(
+                "materialDisplay"
+            );
+
+
+        if (!element) {
+            return;
+        }
+
+
+        const whiteScore =
+            this.materialScore(
+                this.capturedWhite
+            );
+
+
+        const blackScore =
+            this.materialScore(
+                this.capturedBlack
+            );
+
+
+        const difference =
+            whiteScore - blackScore;
+
+
+        if (difference === 0) {
+
+            element.textContent =
+                "MATERIAL EVEN";
+
+        } else if (difference > 0) {
+
+            element.textContent =
+                `WHITE +${difference}`;
+
+        } else {
+
+            element.textContent =
+                `BLACK +${Math.abs(difference)}`;
+
+        }
+
+    },
+
+
+    materialScore(pieces) {
 
         const values = {
             p: 1,
@@ -1277,81 +1262,63 @@ const App = {
         };
 
 
-        let white = 0;
-        let black = 0;
+        return pieces.reduce(
+            (total, piece) => {
+
+                return total +
+                    (values[piece.toLowerCase()] || 0);
+
+            },
+            0
+        );
+
+    },
 
 
-        for (
-            let r = 0;
-            r < 8;
-            r++
-        ) {
+    /* =====================================================
+       STATUS
+    ===================================================== */
 
-            for (
-                let c = 0;
-                c < 8;
-                c++
-            ) {
+    updateStatus() {
 
-                const piece =
-                    ChessGame.board[r][c];
-
-                if (!piece) {
-                    continue;
-                }
-
-                const value =
-                    values[
-                        piece.toLowerCase()
-                    ];
+        const status =
+            document.getElementById(
+                "gameStatus"
+            );
 
 
-                if (
-                    ChessGame.colorOf(piece)
-                    === "w"
-                ) {
+        if (!status) {
+            return;
+        }
 
-                    white += value;
 
-                } else {
+        if (!this.gameStarted) {
 
-                    black += value;
+            status.textContent =
+                "Choose your side and press PLAY GAME.";
 
-                }
-
-            }
+            return;
 
         }
 
 
-        const difference =
-            white - black;
-
-
-        const element =
-            document.getElementById(
-                "materialDisplay"
-            );
+        if (this.gameOver) {
+            return;
+        }
 
 
         if (
-            difference === 0
+            ChessGame.turn ===
+            ChessGame.playerColor
         ) {
 
-            element.textContent =
-                "Material equal";
-
-        } else if (
-            difference > 0
-        ) {
-
-            element.textContent =
-                `White +${difference}`;
+            status.textContent =
+                "Your turn";
 
         } else {
 
-            element.textContent =
-                `Black +${Math.abs(difference)}`;
+            status.textContent =
+                "Computer is thinking...";
 
         }
 
@@ -1362,59 +1329,119 @@ const App = {
        CLOCK
     ===================================================== */
 
+    switchClock(player) {
+
+        this.stopClock();
+
+
+        const playerClock =
+            document.getElementById(
+                "playerClock"
+            );
+
+
+        const computerClock =
+            document.getElementById(
+                "computerClock"
+            );
+
+
+        if (playerClock) {
+            playerClock.classList.remove("active");
+        }
+
+        if (computerClock) {
+            computerClock.classList.remove("active");
+        }
+
+
+        if (player === "player") {
+
+            this.currentClock = "player";
+
+            if (playerClock) {
+                playerClock.classList.add("active");
+            }
+
+        } else {
+
+            this.currentClock = "computer";
+
+            if (computerClock) {
+                computerClock.classList.add("active");
+            }
+
+        }
+
+
+        this.startClock();
+
+    },
+
+
     startClock() {
 
         this.stopClock();
 
 
         this.clockInterval =
-            setInterval(
-                () => {
+            setInterval(() => {
+
+                if (
+                    this.currentClock ===
+                    "player"
+                ) {
+
+                    this.playerTime--;
 
                     if (
-                        !this.gameRunning ||
-                        ChessGame.gameOver
-                    ) {
-                        return;
-                    }
-
-
-                    this.clocks[
-                        this.activeClock
-                    ]--;
-
-
-                    if (
-                        this.clocks[
-                            this.activeClock
-                        ] <= 0
+                        this.playerTime <= 0
                     ) {
 
-                        this.clocks[
-                            this.activeClock
-                        ] = 0;
+                        this.playerTime = 0;
 
-                        this.timeOut();
+                        this.updateClocks();
+
+                        this.timeout("player");
 
                         return;
 
                     }
 
+                } else if (
+                    this.currentClock ===
+                    "computer"
+                ) {
 
-                    this.updateClocks();
+                    this.computerTime--;
 
-                },
-                1000
-            );
+                    if (
+                        this.computerTime <= 0
+                    ) {
+
+                        this.computerTime = 0;
+
+                        this.updateClocks();
+
+                        this.timeout("computer");
+
+                        return;
+
+                    }
+
+                }
+
+
+                this.updateClocks();
+
+            }, 1000);
 
     },
 
 
     stopClock() {
 
-        if (
-            this.clockInterval
-        ) {
+        if (this.clockInterval) {
 
             clearInterval(
                 this.clockInterval
@@ -1427,16 +1454,6 @@ const App = {
     },
 
 
-    switchClock() {
-
-        this.activeClock =
-            ChessGame.turn;
-
-        this.updateClocks();
-
-    },
-
-
     updateClocks() {
 
         const playerClock =
@@ -1444,231 +1461,482 @@ const App = {
                 "playerClock"
             );
 
+
         const computerClock =
             document.getElementById(
                 "computerClock"
             );
 
 
-        const playerTime =
-            this.clocks[
-                this.playerColor
-            ];
+        if (playerClock) {
 
-        const computerTime =
-            this.clocks[
-                ChessGame.computerColor
-            ];
+            playerClock.textContent =
+                this.formatTime(
+                    this.playerTime
+                );
 
-
-        playerClock.textContent =
-            this.formatTime(
-                playerTime
-            );
-
-        computerClock.textContent =
-            this.formatTime(
-                computerTime
-            );
+        }
 
 
-        playerClock.classList.toggle(
-            "active-clock",
-            this.activeClock ===
-                this.playerColor
-        );
+        if (computerClock) {
 
+            computerClock.textContent =
+                this.formatTime(
+                    this.computerTime
+                );
 
-        computerClock.classList.toggle(
-            "active-clock",
-            this.activeClock ===
-                ChessGame.computerColor
-        );
+        }
 
     },
 
 
     formatTime(seconds) {
 
-        const mins =
-            Math.floor(
-                seconds / 60
-            );
+        const minutes =
+            Math.floor(seconds / 60);
 
-        const secs =
+        const remaining =
             seconds % 60;
 
 
         return (
-            String(mins).padStart(
-                2,
-                "0"
-            ) +
+            String(minutes).padStart(2, "0") +
             ":" +
-            String(secs).padStart(
-                2,
-                "0"
-            )
+            String(remaining).padStart(2, "0")
         );
 
     },
 
 
-    timeOut() {
+    timeout(player) {
 
-        this.stopClock();
-
-        ChessGame.gameOver = true;
-
-        ChessGame.winner =
-            ChessGame.opposite(
-                this.activeClock
-            );
-
-
-        if (
-            ChessGame.winner ===
-            this.playerColor
-        ) {
-
-            this.setStatus(
-                "Time out — you win!"
-            );
-
-        } else {
-
-            this.setStatus(
-                "Time out — computer wins."
-            );
-
-        }
-
-
-        this.finishGame();
-
-    },
-
-
-    /* =====================================================
-       FINISH GAME
-    ===================================================== */
-
-    finishGame() {
-
-        if (
-            !this.gameRunning
-        ) {
+        if (this.gameOver) {
             return;
         }
 
 
-        this.gameRunning = false;
-
-        this.aiThinking = false;
+        this.gameOver = true;
 
         this.stopClock();
 
 
-        this.stats.games++;
+        const status =
+            document.getElementById(
+                "gameStatus"
+            );
 
 
-        if (
-            ChessGame.winner ===
-            this.playerColor
-        ) {
+        if (player === "player") {
 
-            this.stats.wins++;
+            status.textContent =
+                "Time out — Computer wins.";
 
-        } else if (
-            ChessGame.winner ===
-            "draw"
-        ) {
-
-            this.stats.draws++;
+            this.recordResult("loss");
 
         } else {
 
-            this.stats.losses++;
+            status.textContent =
+                "Time out — You win!";
+
+            this.recordResult("win");
 
         }
 
 
-        this.saveStats();
-
-        this.updateStats();
-
-        this.updateStatus();
+        status.classList.add("game-over");
 
     },
 
 
     /* =====================================================
-       STATS
+       GAME OVER
     ===================================================== */
 
-    loadStats() {
+    finishGame() {
 
-        try {
+        this.gameOver = true;
 
-            const saved =
-                localStorage.getItem(
-                    "chessStats"
-                );
+        this.stopClock();
 
-            if (saved) {
 
-                this.stats =
-                    JSON.parse(saved);
+        const status =
+            document.getElementById(
+                "gameStatus"
+            );
+
+
+        status.classList.add("game-over");
+
+
+        if (
+            ChessGame.isCheckmate()
+        ) {
+
+            const winner =
+                ChessGame.turn ===
+                ChessGame.playerColor
+                    ? "computer"
+                    : "player";
+
+
+            if (winner === "player") {
+
+                status.textContent =
+                    "Checkmate — You win!";
+
+                this.recordResult("win");
+
+            } else {
+
+                status.textContent =
+                    "Checkmate — Computer wins.";
+
+                this.recordResult("loss");
 
             }
 
-        } catch (error) {
+        } else {
 
-            console.error(
-                error
-            );
+            status.textContent =
+                "Draw — The game is over.";
+
+            this.recordResult("draw");
 
         }
-
-
-        this.updateStats();
 
     },
 
 
-    saveStats() {
+    /* =====================================================
+       UNDO
+    ===================================================== */
 
-        localStorage.setItem(
-            "chessStats",
-            JSON.stringify(
-                this.stats
-            )
+    undo() {
+
+        if (
+            !this.gameStarted ||
+            this.gameOver ||
+            ChessGame.history.length === 0
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * Undo the player's last move and
+         * computer's reply where possible.
+         */
+
+        if (
+            ChessGame.history.length >= 2
+        ) {
+
+            ChessGame.undoMove();
+
+            ChessGame.undoMove();
+
+            if (this.moveHistory.length >= 2) {
+
+                this.moveHistory.splice(
+                    this.moveHistory.length - 2,
+                    2
+                );
+
+            }
+
+        } else {
+
+            ChessGame.undoMove();
+
+            this.moveHistory.pop();
+
+        }
+
+
+        this.rebuildCapturedPieces();
+
+
+        this.selectedSquare = null;
+
+        this.gameOver = false;
+
+
+        this.renderBoard();
+
+        this.renderMoves();
+
+        this.renderCapturedPieces();
+
+        this.updateMaterial();
+
+        this.updateStatus();
+
+
+        this.switchClock(
+            ChessGame.turn ===
+            ChessGame.playerColor
+                ? "player"
+                : "computer"
         );
 
     },
 
 
-    updateStats() {
+    rebuildCapturedPieces() {
 
-        document.getElementById(
-            "games"
-        ).textContent =
-            this.stats.games;
+        this.capturedWhite = [];
 
-        document.getElementById(
-            "wins"
-        ).textContent =
-            this.stats.wins;
+        this.capturedBlack = [];
 
-        document.getElementById(
-            "losses"
-        ).textContent =
-            this.stats.losses;
 
-        document.getElementById(
-            "draws"
-        ).textContent =
-            this.stats.draws;
+        ChessGame.history.forEach(
+            snapshot => {
+
+                if (!snapshot.captured) {
+                    return;
+                }
+
+
+                const piece =
+                    snapshot.captured;
+
+
+                if (
+                    piece ===
+                    piece.toUpperCase()
+                ) {
+
+                    this.capturedWhite.push(
+                        piece
+                    );
+
+                } else {
+
+                    this.capturedBlack.push(
+                        piece
+                    );
+
+                }
+
+            }
+        );
+
+    },
+
+
+    /* =====================================================
+       RESIGN
+    ===================================================== */
+
+    resign() {
+
+        if (
+            !this.gameStarted ||
+            this.gameOver
+        ) {
+
+            return;
+
+        }
+
+
+        this.gameOver = true;
+
+        this.stopClock();
+
+
+        const status =
+            document.getElementById(
+                "gameStatus"
+            );
+
+
+        status.textContent =
+            "You resigned — Computer wins.";
+
+
+        status.classList.add(
+            "game-over"
+        );
+
+
+        this.recordResult("loss");
+
+    },
+
+
+    /* =====================================================
+       RESET DISPLAY
+    ===================================================== */
+
+    resetGameDisplay() {
+
+        this.gameStarted = false;
+
+        this.gameOver = false;
+
+        this.playerTime = 600;
+
+        this.computerTime = 600;
+
+        this.moveHistory = [];
+
+        this.capturedWhite = [];
+
+        this.capturedBlack = [];
+
+
+        this.updateClocks();
+
+
+        const playerCaptured =
+            document.getElementById(
+                "playerCaptured"
+            );
+
+
+        const computerCaptured =
+            document.getElementById(
+                "computerCaptured"
+            );
+
+
+        if (playerCaptured) {
+            playerCaptured.innerHTML = "";
+        }
+
+        if (computerCaptured) {
+            computerCaptured.innerHTML = "";
+        }
+
+
+        const status =
+            document.getElementById(
+                "gameStatus"
+            );
+
+
+        if (status) {
+
+            status.classList.remove(
+                "game-over"
+            );
+
+            status.textContent =
+                "Choose your side and press PLAY GAME.";
+
+        }
+
+    },
+
+
+    /* =====================================================
+       STATISTICS
+    ===================================================== */
+
+    getStats() {
+
+        const saved =
+            localStorage.getItem(
+                "chessAcademyStats"
+            );
+
+
+        if (!saved) {
+
+            return {
+                games: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0
+            };
+
+        }
+
+
+        try {
+
+            return JSON.parse(saved);
+
+        } catch {
+
+            return {
+                games: 0,
+                wins: 0,
+                losses: 0,
+                draws: 0
+            };
+
+        }
+
+    },
+
+
+    loadStats() {
+
+        const stats =
+            this.getStats();
+
+
+        const fields = [
+            ["games", stats.games],
+            ["wins", stats.wins],
+            ["losses", stats.losses],
+            ["draws", stats.draws]
+        ];
+
+
+        fields.forEach(
+            ([id, value]) => {
+
+                const element =
+                    document.getElementById(id);
+
+
+                if (element) {
+
+                    element.textContent =
+                        value;
+
+                }
+
+            }
+        );
+
+    },
+
+
+    recordResult(result) {
+
+        const stats =
+            this.getStats();
+
+
+        stats.games++;
+
+
+        if (result === "win") {
+            stats.wins++;
+        }
+
+        if (result === "loss") {
+            stats.losses++;
+        }
+
+        if (result === "draw") {
+            stats.draws++;
+        }
+
+
+        localStorage.setItem(
+            "chessAcademyStats",
+            JSON.stringify(stats)
+        );
+
+
+        this.loadStats();
 
     },
 
@@ -1677,13 +1945,7 @@ const App = {
        PWA
     ===================================================== */
 
-    bindInstall() {
-
-        const button =
-            document.getElementById(
-                "installButton"
-            );
-
+    bindPWA() {
 
         window.addEventListener(
             "beforeinstallprompt",
@@ -1691,35 +1953,47 @@ const App = {
 
                 event.preventDefault();
 
-                this.deferredInstallPrompt =
-                    event;
-
-                button.hidden = false;
-
-            }
-        );
+                this.installPrompt = event;
 
 
-        button.addEventListener(
-            "click",
-            async () => {
+                const button =
+                    document.getElementById(
+                        "installButton"
+                    );
 
-                if (
-                    !this.deferredInstallPrompt
-                ) {
-                    return;
+
+                if (button) {
+
+                    button.classList.remove(
+                        "hidden"
+                    );
+
+
+                    button.onclick =
+                        async () => {
+
+                            if (!this.installPrompt) {
+                                return;
+                            }
+
+
+                            this.installPrompt.prompt();
+
+
+                            await this.installPrompt.userChoice;
+
+
+                            this.installPrompt =
+                                null;
+
+
+                            button.classList.add(
+                                "hidden"
+                            );
+
+                        };
+
                 }
-
-
-                this.deferredInstallPrompt.prompt();
-
-                await this.deferredInstallPrompt
-                    .userChoice;
-
-                this.deferredInstallPrompt =
-                    null;
-
-                button.hidden = true;
 
             }
         );
@@ -1738,11 +2012,12 @@ const App = {
                             "/static/service-worker.js"
                         )
                         .catch(
-                            error =>
-                                console.error(
-                                    "Service worker:",
+                            error => {
+                                console.log(
+                                    "Service worker registration failed:",
                                     error
-                                )
+                                );
+                            }
                         );
 
                 }
@@ -1755,17 +2030,15 @@ const App = {
 };
 
 
-/*
- * Safe global files array.
- */
+/* =========================================================
+   START APPLICATION
+========================================================= */
 
-const FILES_SAFE = [
-    "a",
-    "b",
-    "c",
-    "d",
-    "e",
-    "f",
-    "g",
-    "h"
-];
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        App.init();
+
+    }
+);
