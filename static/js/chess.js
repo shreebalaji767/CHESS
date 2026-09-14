@@ -1,634 +1,365 @@
 /* =========================================================
    CHESS ENGINE
+   No database.
+   No external libraries.
 ========================================================= */
 
 const PIECES = {
-
     w: {
-        K: "♔",
-        Q: "♕",
-        R: "♖",
-        B: "♗",
-        N: "♘",
-        P: "♙"
+        k: "♔",
+        q: "♕",
+        r: "♖",
+        b: "♗",
+        n: "♘",
+        p: "♙"
     },
 
     b: {
-        K: "♚",
-        Q: "♛",
-        R: "♜",
-        B: "♝",
-        N: "♞",
-        P: "♟"
+        k: "♚",
+        q: "♛",
+        r: "♜",
+        b: "♝",
+        n: "♞",
+        p: "♟"
     }
-
 };
 
 
-let board = [];
-
-let turn = "w";
-
-let selectedSquare = null;
-
-let legalMovesForSelected = [];
-
-let gameOver = false;
-
-let playerColor = "w";
-
-let computerColor = "b";
-
-let moveHistory = [];
-
-let positionHistory = [];
-
-let capturedPieces = [];
-
-let boardFlipped = false;
-
-let difficulty = 3;
+const PIECE_VALUES = {
+    p: 100,
+    n: 320,
+    b: 330,
+    r: 500,
+    q: 900,
+    k: 20000
+};
 
 
-/* =========================================================
-   INITIAL BOARD
-========================================================= */
-
-function createInitialBoard() {
-
-    return [
-
-        [
-            "r",
-            "n",
-            "b",
-            "q",
-            "k",
-            "b",
-            "n",
-            "r"
-        ],
-
-        [
-            "p",
-            "p",
-            "p",
-            "p",
-            "p",
-            "p",
-            "p",
-            "p"
-        ],
-
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ],
-
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ],
-
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ],
-
-        [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
-        ],
-
-        [
-            "P",
-            "P",
-            "P",
-            "P",
-            "P",
-            "P",
-            "P"
-        ],
-
-        [
-            "R",
-            "N",
-            "B",
-            "Q",
-            "K",
-            "B",
-            "N",
-            "R"
-        ]
-
-    ];
-
-}
+const FILES = [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+];
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
+const ChessGame = {
 
-function isWhite(piece) {
+    board: [],
+    turn: "w",
 
-    return piece &&
-        piece === piece.toUpperCase();
+    selected: null,
 
-}
+    legalMoves: [],
 
+    history: [],
 
-function pieceColor(piece) {
+    gameOver: false,
 
-    if (!piece) {
-        return null;
-    }
+    winner: null,
 
-    return isWhite(piece) ? "w" : "b";
+    playerColor: "w",
 
-}
+    computerColor: "b",
 
+    castling: {
+        wK: true,
+        wQ: true,
+        bK: true,
+        bQ: true
+    },
 
-function oppositeColor(color) {
-
-    return color === "w"
-        ? "b"
-        : "w";
-
-}
+    enPassant: null,
 
 
-function cloneBoard(source) {
+    init(playerColor = "w") {
 
-    return source.map(
-        row => [...row]
-    );
+        this.playerColor = playerColor;
 
-}
+        this.computerColor =
+            playerColor === "w"
+                ? "b"
+                : "w";
 
+        this.reset();
 
-function squareName(row, col) {
-
-    return (
-        String.fromCharCode(97 + col)
-        +
-        (8 - row)
-    );
-
-}
+    },
 
 
-function insideBoard(row, col) {
+    reset() {
 
-    return (
-        row >= 0 &&
-        row < 8 &&
-        col >= 0 &&
-        col < 8
-    );
+        this.board = [
+            [
+                "r",
+                "n",
+                "b",
+                "q",
+                "k",
+                "b",
+                "n",
+                "r"
+            ],
 
-}
+            [
+                "p",
+                "p",
+                "p",
+                "p",
+                "p",
+                "p",
+                "p",
+                "p"
+            ],
+
+            [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+
+            [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+
+            [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+
+            [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            ],
+
+            [
+                "P",
+                "P",
+                "P",
+                "P",
+                "P",
+                "P",
+                "P",
+                "P"
+            ],
+
+            [
+                "R",
+                "N",
+                "B",
+                "Q",
+                "K",
+                "B",
+                "N",
+                "R"
+            ]
+        ];
+
+        this.turn = "w";
+
+        this.selected = null;
+
+        this.legalMoves = [];
+
+        this.history = [];
+
+        this.gameOver = false;
+
+        this.winner = null;
+
+        this.castling = {
+            wK: true,
+            wQ: true,
+            bK: true,
+            bQ: true
+        };
+
+        this.enPassant = null;
+
+    },
 
 
-/* =========================================================
-   FIND KING
-========================================================= */
+    cloneBoard(board) {
 
-function findKing(position, color) {
+        return board.map(
+            row => row.slice()
+        );
 
-    const king =
-        color === "w"
-            ? "K"
-            : "k";
+    },
 
-    for (let r = 0; r < 8; r++) {
 
-        for (let c = 0; c < 8; c++) {
+    colorOf(piece) {
 
-            if (position[r][c] === king) {
-
-                return {
-                    row: r,
-                    col: c
-                };
-
-            }
-
+        if (!piece) {
+            return null;
         }
 
-    }
-
-    return null;
-
-}
-
-
-/* =========================================================
-   ATTACK CHECK
-========================================================= */
-
-function squareAttacked(
-    position,
-    row,
-    col,
-    byColor
-) {
-
-    const pawn =
-        byColor === "w"
-            ? "P"
-            : "p";
-
-    const pawnDirection =
-        byColor === "w"
-            ? 1
-            : -1;
-
-    for (const dc of [-1, 1]) {
-
-        const r = row + pawnDirection;
-
-        const c = col + dc;
-
-        if (
-            insideBoard(r, c) &&
-            position[r][c] === pawn
-        ) {
-            return true;
-        }
-
-    }
-
-
-    const knight =
-        byColor === "w"
-            ? "N"
-            : "n";
-
-    const knightOffsets = [
-
-        [-2, -1],
-        [-2, 1],
-        [-1, -2],
-        [-1, 2],
-        [1, -2],
-        [1, 2],
-        [2, -1],
-        [2, 1]
-
-    ];
-
-    for (const [dr, dc] of knightOffsets) {
-
-        const r = row + dr;
-        const c = col + dc;
-
-        if (
-            insideBoard(r, c) &&
-            position[r][c] === knight
-        ) {
-            return true;
-        }
-
-    }
-
-
-    const enemyKing =
-        byColor === "w"
-            ? "K"
-            : "k";
-
-    for (let dr = -1; dr <= 1; dr++) {
-
-        for (let dc = -1; dc <= 1; dc++) {
-
-            if (!dr && !dc) {
-                continue;
-            }
-
-            const r = row + dr;
-            const c = col + dc;
-
-            if (
-                insideBoard(r, c) &&
-                position[r][c] === enemyKing
-            ) {
-                return true;
-            }
-
-        }
-
-    }
-
-
-    const rook =
-        byColor === "w"
-            ? "R"
-            : "r";
-
-    const queen =
-        byColor === "w"
-            ? "Q"
-            : "q";
-
-    const bishop =
-        byColor === "w"
-            ? "B"
+        return piece === piece.toUpperCase()
+            ? "w"
             : "b";
 
-
-    const rookDirections = [
-
-        [-1, 0],
-        [1, 0],
-        [0, -1],
-        [0, 1]
-
-    ];
+    },
 
 
-    for (const [dr, dc] of rookDirections) {
+    typeOf(piece) {
 
-        let r = row + dr;
-        let c = col + dc;
+        return piece
+            ? piece.toLowerCase()
+            : null;
 
-        while (insideBoard(r, c)) {
-
-            const piece = position[r][c];
-
-            if (piece) {
-
-                if (
-                    piece === rook ||
-                    piece === queen
-                ) {
-                    return true;
-                }
-
-                break;
-            }
-
-            r += dr;
-            c += dc;
-        }
-
-    }
+    },
 
 
-    const bishopDirections = [
+    inside(r, c) {
 
-        [-1, -1],
-        [-1, 1],
-        [1, -1],
-        [1, 1]
+        return (
+            r >= 0 &&
+            r < 8 &&
+            c >= 0 &&
+            c < 8
+        );
 
-    ];
-
-
-    for (const [dr, dc] of bishopDirections) {
-
-        let r = row + dr;
-        let c = col + dc;
-
-        while (insideBoard(r, c)) {
-
-            const piece = position[r][c];
-
-            if (piece) {
-
-                if (
-                    piece === bishop ||
-                    piece === queen
-                ) {
-                    return true;
-                }
-
-                break;
-            }
-
-            r += dr;
-            c += dc;
-        }
-
-    }
-
-    return false;
-
-}
+    },
 
 
-/* =========================================================
-   CHECK
-========================================================= */
+    opposite(color) {
 
-function isInCheck(position, color) {
+        return color === "w"
+            ? "b"
+            : "w";
 
-    const king = findKing(
-        position,
-        color
-    );
-
-    if (!king) {
-        return true;
-    }
-
-    return squareAttacked(
-        position,
-        king.row,
-        king.col,
-        oppositeColor(color)
-    );
-
-}
+    },
 
 
-/* =========================================================
-   PSEUDO MOVES
-========================================================= */
+    squareName(r, c) {
 
-function pseudoMoves(
-    position,
-    row,
-    col
-) {
+        return (
+            FILES[c] +
+            (8 - r)
+        );
 
-    const piece = position[row][col];
-
-    if (!piece) {
-        return [];
-    }
-
-    const color =
-        pieceColor(piece);
-
-    const type =
-        piece.toUpperCase();
-
-    const moves = [];
+    },
 
 
-    function addMove(
-        r,
-        c
-    ) {
-
-        if (!insideBoard(r, c)) {
-            return;
-        }
+    findKing(board, color) {
 
         const target =
-            position[r][c];
-
-        if (
-            target &&
-            pieceColor(target) === color
-        ) {
-            return;
-        }
-
-        moves.push({
-            from: {
-                row,
-                col
-            },
-
-            to: {
-                row: r,
-                col: c
-            }
-        });
-
-    }
-
-
-    if (type === "P") {
-
-        const direction =
             color === "w"
-                ? -1
-                : 1;
+                ? "K"
+                : "k";
 
-        const startRow =
-            color === "w"
-                ? 6
-                : 1;
-
-
-        if (
-            insideBoard(
-                row + direction,
-                col
-            ) &&
-            !position[
-                row + direction
-            ][col]
+        for (
+            let r = 0;
+            r < 8;
+            r++
         ) {
 
-            moves.push({
-                from: {
-                    row,
-                    col
-                },
+            for (
+                let c = 0;
+                c < 8;
+                c++
+            ) {
 
-                to: {
-                    row: row + direction,
-                    col
+                if (
+                    board[r][c] === target
+                ) {
+
+                    return {
+                        r,
+                        c
+                    };
+
                 }
-            });
 
+            }
+
+        }
+
+        return null;
+
+    },
+
+
+    isSquareAttacked(
+        board,
+        r,
+        c,
+        byColor
+    ) {
+
+        /*
+         * Pawn attacks
+         */
+
+        const pawn =
+            byColor === "w"
+                ? "P"
+                : "p";
+
+        const pawnRow =
+            byColor === "w"
+                ? r + 1
+                : r - 1;
+
+        for (
+            const dc of [-1, 1]
+        ) {
+
+            const pc =
+                c + dc;
 
             if (
-                row === startRow &&
-                !position[
-                    row + direction * 2
-                ][col]
+                this.inside(
+                    pawnRow,
+                    pc
+                ) &&
+                board[pawnRow][pc] === pawn
             ) {
 
-                moves.push({
-                    from: {
-                        row,
-                        col
-                    },
-
-                    to: {
-                        row:
-                            row + direction * 2,
-                        col
-                    }
-                });
+                return true;
 
             }
 
         }
 
 
-        for (const dc of [-1, 1]) {
+        /*
+         * Knight attacks
+         */
 
-            const r =
-                row + direction;
+        const knight =
+            byColor === "w"
+                ? "N"
+                : "n";
 
-            const c =
-                col + dc;
-
-            if (!insideBoard(r, c)) {
-                continue;
-            }
-
-            const target =
-                position[r][c];
-
-            if (
-                target &&
-                pieceColor(target) !== color
-            ) {
-
-                moves.push({
-                    from: {
-                        row,
-                        col
-                    },
-
-                    to: {
-                        row: r,
-                        col: c
-                    }
-                });
-
-            }
-
-        }
-
-    }
-
-
-    if (type === "N") {
-
-        const offsets = [
-
+        const knightOffsets = [
             [-2, -1],
             [-2, 1],
             [-1, -2],
@@ -637,118 +368,38 @@ function pseudoMoves(
             [1, 2],
             [2, -1],
             [2, 1]
-
         ];
 
-        offsets.forEach(
-            ([dr, dc]) =>
-                addMove(
-                    row + dr,
-                    col + dc
-                )
-        );
-
-    }
-
-
-    if (
-        type === "B" ||
-        type === "R" ||
-        type === "Q"
-    ) {
-
-        let directions = [];
-
-        if (
-            type === "B" ||
-            type === "Q"
+        for (
+            const [
+                dr,
+                dc
+            ] of knightOffsets
         ) {
 
-            directions.push(
-                [-1, -1],
-                [-1, 1],
-                [1, -1],
-                [1, 1]
-            );
+            const nr = r + dr;
+            const nc = c + dc;
 
-        }
-
-        if (
-            type === "R" ||
-            type === "Q"
-        ) {
-
-            directions.push(
-                [-1, 0],
-                [1, 0],
-                [0, -1],
-                [0, 1]
-            );
-
-        }
-
-
-        for (const [dr, dc] of directions) {
-
-            let r = row + dr;
-            let c = col + dc;
-
-            while (
-                insideBoard(r, c)
+            if (
+                this.inside(nr, nc) &&
+                board[nr][nc] === knight
             ) {
 
-                const target =
-                    position[r][c];
-
-                if (!target) {
-
-                    moves.push({
-                        from: {
-                            row,
-                            col
-                        },
-
-                        to: {
-                            row: r,
-                            col: c
-                        }
-                    });
-
-                } else {
-
-                    if (
-                        pieceColor(target)
-                        !== color
-                    ) {
-
-                        moves.push({
-                            from: {
-                                row,
-                                col
-                            },
-
-                            to: {
-                                row: r,
-                                col: c
-                            }
-                        });
-
-                    }
-
-                    break;
-                }
-
-                r += dr;
-                c += dc;
+                return true;
 
             }
 
         }
 
-    }
 
+        /*
+         * King attacks
+         */
 
-    if (type === "K") {
+        const king =
+            byColor === "w"
+                ? "K"
+                : "k";
 
         for (
             let dr = -1;
@@ -762,813 +413,1415 @@ function pseudoMoves(
                 dc++
             ) {
 
-                if (!dr && !dc) {
+                if (
+                    dr === 0 &&
+                    dc === 0
+                ) {
                     continue;
                 }
 
-                addMove(
-                    row + dr,
-                    col + dc
-                );
+                const nr = r + dr;
+                const nc = c + dc;
+
+                if (
+                    this.inside(nr, nc) &&
+                    board[nr][nc] === king
+                ) {
+
+                    return true;
+
+                }
 
             }
 
         }
 
-    }
 
-    return moves;
+        /*
+         * Sliding pieces
+         */
 
-}
+        const rook =
+            byColor === "w"
+                ? "R"
+                : "r";
+
+        const bishop =
+            byColor === "w"
+                ? "B"
+                : "b";
+
+        const queen =
+            byColor === "w"
+                ? "Q"
+                : "q";
 
 
-/* =========================================================
-   APPLY MOVE
-========================================================= */
-
-function applyMove(
-    position,
-    move
-) {
-
-    const next =
-        cloneBoard(position);
-
-    const piece =
-        next[
-            move.from.row
-        ][
-            move.from.col
+        const straight = [
+            [-1, 0],
+            [1, 0],
+            [0, -1],
+            [0, 1]
         ];
 
-    next[
-        move.to.row
-    ][
-        move.to.col
-    ] = piece;
+        for (
+            const [
+                dr,
+                dc
+            ] of straight
+        ) {
 
-    next[
-        move.from.row
-    ][
-        move.from.col
-    ] = "";
+            let nr = r + dr;
+            let nc = c + dc;
 
-
-    /* PROMOTION */
-
-    if (
-        piece === "P" &&
-        move.to.row === 0
-    ) {
-
-        next[
-            move.to.row
-        ][
-            move.to.col
-        ] = "Q";
-
-    }
-
-
-    if (
-        piece === "p" &&
-        move.to.row === 7
-    ) {
-
-        next[
-            move.to.row
-        ][
-            move.to.col
-        ] = "q";
-
-    }
-
-    return next;
-
-}
-
-
-/* =========================================================
-   LEGAL MOVES
-========================================================= */
-
-function legalMoves(
-    position,
-    color
-) {
-
-    const result = [];
-
-
-    for (let r = 0; r < 8; r++) {
-
-        for (let c = 0; c < 8; c++) {
-
-            const piece =
-                position[r][c];
-
-            if (
-                !piece ||
-                pieceColor(piece) !== color
-            ) {
-                continue;
-            }
-
-
-            const candidates =
-                pseudoMoves(
-                    position,
-                    r,
-                    c
-                );
-
-
-            for (const move of candidates) {
-
-                const next =
-                    applyMove(
-                        position,
-                        move
-                    );
-
-                if (
-                    !isInCheck(
-                        next,
-                        color
-                    )
-                ) {
-
-                    result.push(move);
-
-                }
-
-            }
-
-        }
-
-    }
-
-    return result;
-
-}
-
-
-/* =========================================================
-   RENDER BOARD
-========================================================= */
-
-function renderBoard() {
-
-    const container =
-        document.getElementById(
-            "chessBoard"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-
-    const rows =
-        boardFlipped
-            ? [...Array(8).keys()].reverse()
-            : [...Array(8).keys()];
-
-    const cols =
-        boardFlipped
-            ? [...Array(8).keys()].reverse()
-            : [...Array(8).keys()];
-
-
-    for (const row of rows) {
-
-        for (const col of cols) {
-
-            const square =
-                document.createElement(
-                    "div"
-                );
-
-            square.classList.add(
-                "square"
-            );
-
-
-            if (
-                (row + col) % 2 === 0
+            while (
+                this.inside(nr, nc)
             ) {
 
-                square.classList.add(
-                    "light-square"
-                );
-
-            } else {
-
-                square.classList.add(
-                    "dark-square"
-                );
-
-            }
-
-
-            square.dataset.row = row;
-            square.dataset.col = col;
-
-            square.dataset.file =
-                String.fromCharCode(
-                    97 + col
-                );
-
-            square.dataset.rank =
-                8 - row;
-
-
-            const piece =
-                board[row][col];
-
-
-            if (piece) {
-
-                square.textContent =
-                    PIECES[
-                        pieceColor(piece)
-                    ][
-                        piece.toUpperCase()
-                    ];
-
-
-                if (
-                    pieceColor(piece)
-                    === "w"
-                ) {
-
-                    square.classList.add(
-                        "white-piece"
-                    );
-
-                } else {
-
-                    square.classList.add(
-                        "black-piece"
-                    );
-
-                }
-
-            }
-
-
-            if (
-                selectedSquare &&
-                selectedSquare.row === row &&
-                selectedSquare.col === col
-            ) {
-
-                square.classList.add(
-                    "selected"
-                );
-
-            }
-
-
-            if (
-                legalMovesForSelected.some(
-                    move =>
-                        move.to.row === row &&
-                        move.to.col === col
-                )
-            ) {
-
-                square.classList.add(
-                    "legal-move"
-                );
-
+                const piece =
+                    board[nr][nc];
 
                 if (piece) {
 
-                    square.classList.add(
-                        "capture-target"
-                    );
+                    if (
+                        piece === rook ||
+                        piece === queen
+                    ) {
+
+                        return true;
+
+                    }
+
+                    break;
+
+                }
+
+                nr += dr;
+                nc += dc;
+
+            }
+
+        }
+
+
+        const diagonal = [
+            [-1, -1],
+            [-1, 1],
+            [1, -1],
+            [1, 1]
+        ];
+
+        for (
+            const [
+                dr,
+                dc
+            ] of diagonal
+        ) {
+
+            let nr = r + dr;
+            let nc = c + dc;
+
+            while (
+                this.inside(nr, nc)
+            ) {
+
+                const piece =
+                    board[nr][nc];
+
+                if (piece) {
+
+                    if (
+                        piece === bishop ||
+                        piece === queen
+                    ) {
+
+                        return true;
+
+                    }
+
+                    break;
+
+                }
+
+                nr += dr;
+                nc += dc;
+
+            }
+
+        }
+
+        return false;
+
+    },
+
+
+    isInCheck(
+        board,
+        color
+    ) {
+
+        const king =
+            this.findKing(
+                board,
+                color
+            );
+
+        if (!king) {
+            return true;
+        }
+
+        return this.isSquareAttacked(
+            board,
+            king.r,
+            king.c,
+            this.opposite(color)
+        );
+
+    },
+
+
+    pseudoMoves(
+        board,
+        r,
+        c,
+        color,
+        includeCastle = true
+    ) {
+
+        const moves = [];
+
+        const piece =
+            board[r][c];
+
+        if (!piece) {
+            return moves;
+        }
+
+        if (
+            this.colorOf(piece) !== color
+        ) {
+
+            return moves;
+
+        }
+
+        const type =
+            this.typeOf(piece);
+
+
+        /*
+         * PAWN
+         */
+
+        if (type === "p") {
+
+            const direction =
+                color === "w"
+                    ? -1
+                    : 1;
+
+            const startRow =
+                color === "w"
+                    ? 6
+                    : 1;
+
+            const promotionRow =
+                color === "w"
+                    ? 0
+                    : 7;
+
+            const oneR =
+                r + direction;
+
+            if (
+                this.inside(oneR, c) &&
+                !board[oneR][c]
+            ) {
+
+                if (
+                    oneR === promotionRow
+                ) {
+
+                    for (
+                        const promotion of [
+                            "q",
+                            "r",
+                            "b",
+                            "n"
+                        ]
+                    ) {
+
+                        moves.push({
+                            from: {r, c},
+                            to: {
+                                r: oneR,
+                                c
+                            },
+                            promotion
+                        });
+
+                    }
+
+                } else {
+
+                    moves.push({
+                        from: {r, c},
+                        to: {
+                            r: oneR,
+                            c
+                        }
+                    });
+
+                }
+
+
+                if (
+                    r === startRow
+                ) {
+
+                    const twoR =
+                        r +
+                        direction * 2;
+
+                    if (
+                        !board[twoR][c]
+                    ) {
+
+                        moves.push({
+                            from: {r, c},
+                            to: {
+                                r: twoR,
+                                c
+                            },
+                            doublePawn: true
+                        });
+
+                    }
 
                 }
 
             }
 
 
-            square.addEventListener(
-                "click",
-                handleSquareClick
-            );
+            for (
+                const dc of [-1, 1]
+            ) {
+
+                const nr =
+                    r + direction;
+
+                const nc =
+                    c + dc;
+
+                if (
+                    !this.inside(nr, nc)
+                ) {
+                    continue;
+                }
+
+                const target =
+                    board[nr][nc];
+
+                if (
+                    target &&
+                    this.colorOf(target) !== color
+                ) {
+
+                    if (
+                        nr === promotionRow
+                    ) {
+
+                        for (
+                            const promotion of [
+                                "q",
+                                "r",
+                                "b",
+                                "n"
+                            ]
+                        ) {
+
+                            moves.push({
+                                from: {r, c},
+                                to: {
+                                    r: nr,
+                                    c: nc
+                                },
+                                promotion
+                            });
+
+                        }
+
+                    } else {
+
+                        moves.push({
+                            from: {r, c},
+                            to: {
+                                r: nr,
+                                c: nc
+                            }
+                        });
+
+                    }
+
+                }
 
 
-            container.appendChild(
-                square
-            );
+                /*
+                 * En passant
+                 */
+
+                if (
+                    this.enPassant &&
+                    this.enPassant.r === nr &&
+                    this.enPassant.c === nc
+                ) {
+
+                    moves.push({
+                        from: {r, c},
+                        to: {
+                            r: nr,
+                            c: nc
+                        },
+                        enPassant: true
+                    });
+
+                }
+
+            }
 
         }
 
-    }
 
-}
+        /*
+         * KNIGHT
+         */
+
+        if (type === "n") {
+
+            const offsets = [
+                [-2, -1],
+                [-2, 1],
+                [-1, -2],
+                [-1, 2],
+                [1, -2],
+                [1, 2],
+                [2, -1],
+                [2, 1]
+            ];
+
+            for (
+                const [
+                    dr,
+                    dc
+                ] of offsets
+            ) {
+
+                const nr = r + dr;
+                const nc = c + dc;
+
+                if (
+                    !this.inside(nr, nc)
+                ) {
+                    continue;
+                }
+
+                const target =
+                    board[nr][nc];
+
+                if (
+                    !target ||
+                    this.colorOf(target) !== color
+                ) {
+
+                    moves.push({
+                        from: {r, c},
+                        to: {
+                            r: nr,
+                            c: nc
+                        }
+                    });
+
+                }
+
+            }
+
+        }
 
 
-/* =========================================================
-   CLICK HANDLER
-========================================================= */
+        /*
+         * BISHOP / ROOK / QUEEN
+         */
 
-function handleSquareClick(event) {
+        if (
+            type === "b" ||
+            type === "r" ||
+            type === "q"
+        ) {
 
-    if (gameOver) {
-        return;
-    }
+            let directions = [];
+
+            if (
+                type === "b" ||
+                type === "q"
+            ) {
+
+                directions.push(
+                    [-1, -1],
+                    [-1, 1],
+                    [1, -1],
+                    [1, 1]
+                );
+
+            }
+
+            if (
+                type === "r" ||
+                type === "q"
+            ) {
+
+                directions.push(
+                    [-1, 0],
+                    [1, 0],
+                    [0, -1],
+                    [0, 1]
+                );
+
+            }
+
+            for (
+                const [
+                    dr,
+                    dc
+                ] of directions
+            ) {
+
+                let nr = r + dr;
+                let nc = c + dc;
+
+                while (
+                    this.inside(nr, nc)
+                ) {
+
+                    const target =
+                        board[nr][nc];
+
+                    if (!target) {
+
+                        moves.push({
+                            from: {r, c},
+                            to: {
+                                r: nr,
+                                c: nc
+                            }
+                        });
+
+                    } else {
+
+                        if (
+                            this.colorOf(target) !== color
+                        ) {
+
+                            moves.push({
+                                from: {r, c},
+                                to: {
+                                    r: nr,
+                                    c: nc
+                                }
+                            });
+
+                        }
+
+                        break;
+
+                    }
+
+                    nr += dr;
+                    nc += dc;
+
+                }
+
+            }
+
+        }
 
 
-    if (turn !== playerColor) {
-        return;
-    }
+        /*
+         * KING
+         */
+
+        if (type === "k") {
+
+            for (
+                let dr = -1;
+                dr <= 1;
+                dr++
+            ) {
+
+                for (
+                    let dc = -1;
+                    dc <= 1;
+                    dc++
+                ) {
+
+                    if (
+                        dr === 0 &&
+                        dc === 0
+                    ) {
+                        continue;
+                    }
+
+                    const nr = r + dr;
+                    const nc = c + dc;
+
+                    if (
+                        !this.inside(nr, nc)
+                    ) {
+                        continue;
+                    }
+
+                    const target =
+                        board[nr][nc];
+
+                    if (
+                        !target ||
+                        this.colorOf(target) !== color
+                    ) {
+
+                        moves.push({
+                            from: {r, c},
+                            to: {
+                                r: nr,
+                                c: nc
+                            }
+                        });
+
+                    }
+
+                }
+
+            }
 
 
-    const row =
-        Number(
-            event.currentTarget.dataset.row
-        );
+            /*
+             * CASTLING
+             */
 
-    const col =
-        Number(
-            event.currentTarget.dataset.col
-        );
+            if (
+                includeCastle &&
+                !this.isInCheck(board, color)
+            ) {
+
+                const row =
+                    color === "w"
+                        ? 7
+                        : 0;
 
 
-    const piece =
-        board[row][col];
+                // King side
+
+                const kingRight =
+                    color === "w"
+                        ? this.castling.wK
+                        : this.castling.bK;
+
+                if (
+                    kingRight &&
+                    board[row][5] === null &&
+                    board[row][6] === null
+                ) {
+
+                    const rook =
+                        color === "w"
+                            ? "R"
+                            : "r";
+
+                    if (
+                        board[row][7] === rook &&
+                        !this.isSquareAttacked(
+                            board,
+                            row,
+                            5,
+                            this.opposite(color)
+                        ) &&
+                        !this.isSquareAttacked(
+                            board,
+                            row,
+                            6,
+                            this.opposite(color)
+                        )
+                    ) {
+
+                        moves.push({
+                            from: {
+                                r: row,
+                                c: 4
+                            },
+                            to: {
+                                r: row,
+                                c: 6
+                            },
+                            castle: "K"
+                        });
+
+                    }
+
+                }
 
 
-    if (
-        selectedSquare
+                // Queen side
+
+                const queenRight =
+                    color === "w"
+                        ? this.castling.wQ
+                        : this.castling.bQ;
+
+                if (
+                    queenRight &&
+                    board[row][1] === null &&
+                    board[row][2] === null &&
+                    board[row][3] === null
+                ) {
+
+                    const rook =
+                        color === "w"
+                            ? "R"
+                            : "r";
+
+                    if (
+                        board[row][0] === rook &&
+                        !this.isSquareAttacked(
+                            board,
+                            row,
+                            3,
+                            this.opposite(color)
+                        ) &&
+                        !this.isSquareAttacked(
+                            board,
+                            row,
+                            2,
+                            this.opposite(color)
+                        )
+                    ) {
+
+                        moves.push({
+                            from: {
+                                r: row,
+                                c: 4
+                            },
+                            to: {
+                                r: row,
+                                c: 2
+                            },
+                            castle: "Q"
+                        });
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return moves;
+
+    },
+
+
+    makeMoveOnBoard(
+        board,
+        move
     ) {
 
-        const selectedMove =
-            legalMovesForSelected.find(
-                move =>
-                    move.to.row === row &&
-                    move.to.col === col
+        const newBoard =
+            this.cloneBoard(board);
+
+        const piece =
+            newBoard[
+                move.from.r
+            ][
+                move.from.c
+            ];
+
+        newBoard[
+            move.from.r
+        ][
+            move.from.c
+        ] = null;
+
+
+        /*
+         * En passant capture
+         */
+
+        if (move.enPassant) {
+
+            const captureRow =
+                move.from.r;
+
+            newBoard[
+                captureRow
+            ][
+                move.to.c
+            ] = null;
+
+        }
+
+
+        /*
+         * Promotion
+         */
+
+        let finalPiece = piece;
+
+        if (move.promotion) {
+
+            finalPiece =
+                this.colorOf(piece) === "w"
+                    ? move.promotion.toUpperCase()
+                    : move.promotion;
+
+        }
+
+        newBoard[
+            move.to.r
+        ][
+            move.to.c
+        ] = finalPiece;
+
+
+        /*
+         * Castling rook
+         */
+
+        if (move.castle) {
+
+            const row =
+                move.from.r;
+
+            if (
+                move.castle === "K"
+            ) {
+
+                newBoard[row][7] = null;
+
+                newBoard[row][5] =
+                    this.colorOf(piece) === "w"
+                        ? "R"
+                        : "r";
+
+            } else {
+
+                newBoard[row][0] = null;
+
+                newBoard[row][3] =
+                    this.colorOf(piece) === "w"
+                        ? "R"
+                        : "r";
+
+            }
+
+        }
+
+        return newBoard;
+
+    },
+
+
+    getLegalMoves(
+        color,
+        board = this.board
+    ) {
+
+        const moves = [];
+
+        for (
+            let r = 0;
+            r < 8;
+            r++
+        ) {
+
+            for (
+                let c = 0;
+                c < 8;
+                c++
+            ) {
+
+                if (
+                    this.colorOf(board[r][c]) !== color
+                ) {
+                    continue;
+                }
+
+                const pseudo =
+                    this.pseudoMoves(
+                        board,
+                        r,
+                        c,
+                        color
+                    );
+
+                for (
+                    const move of pseudo
+                ) {
+
+                    const next =
+                        this.makeMoveOnBoard(
+                            board,
+                            move
+                        );
+
+                    if (
+                        !this.isInCheck(
+                            next,
+                            color
+                        )
+                    ) {
+
+                        moves.push(move);
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return moves;
+
+    },
+
+
+    getMovesForSquare(
+        r,
+        c
+    ) {
+
+        return this.getLegalMoves(
+            this.turn
+        ).filter(
+            move =>
+                move.from.r === r &&
+                move.from.c === c
+        );
+
+    },
+
+
+    updateCastlingRights(
+        piece,
+        from,
+        to,
+        captured
+    ) {
+
+        if (piece === "K") {
+            this.castling.wK = false;
+            this.castling.wQ = false;
+        }
+
+        if (piece === "k") {
+            this.castling.bK = false;
+            this.castling.bQ = false;
+        }
+
+        if (
+            piece === "R" &&
+            from.r === 7 &&
+            from.c === 0
+        ) {
+            this.castling.wQ = false;
+        }
+
+        if (
+            piece === "R" &&
+            from.r === 7 &&
+            from.c === 7
+        ) {
+            this.castling.wK = false;
+        }
+
+        if (
+            piece === "r" &&
+            from.r === 0 &&
+            from.c === 0
+        ) {
+            this.castling.bQ = false;
+        }
+
+        if (
+            piece === "r" &&
+            from.r === 0 &&
+            from.c === 7
+        ) {
+            this.castling.bK = false;
+        }
+
+
+        /*
+         * Captured rook
+         */
+
+        if (
+            captured === "R" &&
+            to.r === 7 &&
+            to.c === 0
+        ) {
+            this.castling.wQ = false;
+        }
+
+        if (
+            captured === "R" &&
+            to.r === 7 &&
+            to.c === 7
+        ) {
+            this.castling.wK = false;
+        }
+
+        if (
+            captured === "r" &&
+            to.r === 0 &&
+            to.c === 0
+        ) {
+            this.castling.bQ = false;
+        }
+
+        if (
+            captured === "r" &&
+            to.r === 0 &&
+            to.c === 7
+        ) {
+            this.castling.bK = false;
+        }
+
+    },
+
+
+    makeMove(move) {
+
+        if (this.gameOver) {
+            return false;
+        }
+
+        const piece =
+            this.board[
+                move.from.r
+            ][
+                move.from.c
+            ];
+
+        const captured =
+            move.enPassant
+                ? (
+                    this.board[
+                        move.from.r
+                    ][
+                        move.to.c
+                    ]
+                )
+                : (
+                    this.board[
+                        move.to.r
+                    ][
+                        move.to.c
+                    ]
+                );
+
+
+        const snapshot = {
+            board:
+                this.cloneBoard(
+                    this.board
+                ),
+
+            turn:
+                this.turn,
+
+            castling:
+                {
+                    ...this.castling
+                },
+
+            enPassant:
+                this.enPassant
+                    ? {
+                        ...this.enPassant
+                    }
+                    : null,
+
+            move: {
+                ...move
+            },
+
+            captured,
+
+            piece
+
+        };
+
+        this.history.push(snapshot);
+
+
+        this.updateCastlingRights(
+            piece,
+            move.from,
+            move.to,
+            captured
+        );
+
+
+        this.board =
+            this.makeMoveOnBoard(
+                this.board,
+                move
             );
 
 
-        if (selectedMove) {
+        /*
+         * En passant target
+         */
 
-            makeMove(
-                selectedMove,
-                true
+        this.enPassant = null;
+
+        if (
+            this.typeOf(piece) === "p" &&
+            Math.abs(
+                move.to.r -
+                move.from.r
+            ) === 2
+        ) {
+
+            this.enPassant = {
+                r:
+                    (
+                        move.from.r +
+                        move.to.r
+                    ) / 2,
+
+                c:
+                    move.from.c
+            };
+
+        }
+
+
+        this.turn =
+            this.opposite(
+                this.turn
             );
+
+        this.selected = null;
+
+        this.legalMoves = [];
+
+        this.checkGameState();
+
+        return true;
+
+    },
+
+
+    undo() {
+
+        if (
+            this.history.length === 0
+        ) {
+            return false;
+        }
+
+        const snapshot =
+            this.history.pop();
+
+        this.board =
+            snapshot.board;
+
+        this.turn =
+            snapshot.turn;
+
+        this.castling =
+            snapshot.castling;
+
+        this.enPassant =
+            snapshot.enPassant;
+
+        this.gameOver = false;
+
+        this.winner = null;
+
+        this.selected = null;
+
+        this.legalMoves = [];
+
+        return true;
+
+    },
+
+
+    checkGameState() {
+
+        const legal =
+            this.getLegalMoves(
+                this.turn
+            );
+
+        if (
+            legal.length === 0
+        ) {
+
+            this.gameOver = true;
+
+            if (
+                this.isInCheck(
+                    this.board,
+                    this.turn
+                )
+            ) {
+
+                this.winner =
+                    this.opposite(
+                        this.turn
+                    );
+
+            } else {
+
+                this.winner = "draw";
+
+            }
 
             return;
 
         }
 
-    }
+
+        /*
+         * 50 move / repetition is omitted.
+         */
+
+        this.gameOver = false;
+
+        this.winner = null;
+
+    },
 
 
-    if (
-        piece &&
-        pieceColor(piece) === playerColor
+    getAllLegalMoves(color) {
+
+        return this.getLegalMoves(
+            color
+        );
+
+    },
+
+
+    evaluateBoard(
+        board,
+        aiColor
     ) {
 
-        selectedSquare = {
-            row,
-            col
-        };
-
-        legalMovesForSelected =
-            legalMoves(
-                board,
-                playerColor
-            ).filter(
-                move =>
-                    move.from.row === row &&
-                    move.from.col === col
-            );
-
-        renderBoard();
-
-        return;
-
-    }
-
-
-    selectedSquare = null;
-
-    legalMovesForSelected = [];
-
-    renderBoard();
-
-}
-
-
-/* =========================================================
-   MAKE MOVE
-========================================================= */
-
-function makeMove(
-    move,
-    humanMove = false
-) {
-
-    if (gameOver) {
-        return;
-    }
-
-
-    const movingPiece =
-        board[
-            move.from.row
-        ][
-            move.from.col
-        ];
-
-
-    const captured =
-        board[
-            move.to.row
-        ][
-            move.to.col
-        ];
-
-
-    if (captured) {
-
-        capturedPieces.push(
-            captured
-        );
-
-    }
-
-
-    const oldBoard =
-        cloneBoard(board);
-
-
-    positionHistory.push(
-        oldBoard
-    );
-
-
-    board =
-        applyMove(
-            board,
-            move
-        );
-
-
-    moveHistory.push({
-
-        from:
-            squareName(
-                move.from.row,
-                move.from.col
-            ),
-
-        to:
-            squareName(
-                move.to.row,
-                move.to.col
-            ),
-
-        piece:
-            movingPiece,
-
-        captured:
-            captured || ""
-
-    });
-
-
-    turn =
-        oppositeColor(turn);
-
-
-    selectedSquare = null;
-
-    legalMovesForSelected = [];
-
-
-    renderBoard();
-
-    updateMoveHistory();
-
-    updateCaptured();
-
-    updateGameStatus();
-
-
-    if (
-        window.switchChessClock
-    ) {
-
-        window.switchChessClock(
-            turn
-        );
-
-    }
-
-
-    checkGameEnd();
-
-
-    if (
-        !gameOver &&
-        turn === computerColor
-    ) {
-
-        setTimeout(
-            computerMove,
-            350
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   COMPUTER
-========================================================= */
-
-function computerMove() {
-
-    if (gameOver) {
-        return;
-    }
-
-
-    if (turn !== computerColor) {
-        return;
-    }
-
-
-    const moves =
-        legalMoves(
-            board,
-            computerColor
-        );
-
-
-    if (!moves.length) {
-        checkGameEnd();
-        return;
-    }
-
-
-    const depth =
-        Math.min(
-            Number(difficulty),
-            3
-        );
-
-
-    let bestMove =
-        moves[
-            Math.floor(
-                Math.random() *
-                moves.length
-            )
-        ];
-
-
-    let bestScore =
-        computerColor === "w"
-            ? -Infinity
-            : Infinity;
-
-
-    for (const move of moves) {
-
-        const next =
-            applyMove(
-                board,
-                move
-            );
-
-
-        const score =
-            minimax(
-                next,
-                oppositeColor(
-                    computerColor
-                ),
-                depth - 1,
-                -Infinity,
-                Infinity
-            );
-
-
-        if (
-            computerColor === "w"
+        let score = 0;
+
+        for (
+            let r = 0;
+            r < 8;
+            r++
         ) {
 
-            if (score > bestScore) {
-
-                bestScore = score;
-
-                bestMove = move;
-
-            }
-
-        } else {
-
-            if (score < bestScore) {
-
-                bestScore = score;
-
-                bestMove = move;
-
-            }
-
-        }
-
-    }
-
-
-    makeMove(
-        bestMove,
-        false
-    );
-
-}
-
-
-/* =========================================================
-   AI EVALUATION
-========================================================= */
-
-const pieceValues = {
-
-    P: 100,
-    N: 320,
-    B: 330,
-    R: 500,
-    Q: 900,
-    K: 20000
-
-};
-
-
-function evaluate(position) {
-
-    let score = 0;
-
-
-    for (let r = 0; r < 8; r++) {
-
-        for (let c = 0; c < 8; c++) {
-
-            const piece =
-                position[r][c];
-
-            if (!piece) {
-                continue;
-            }
-
-
-            const value =
-                pieceValues[
-                    piece.toUpperCase()
-                ];
-
-
-            if (
-                pieceColor(piece) === "w"
+            for (
+                let c = 0;
+                c < 8;
+                c++
             ) {
 
-                score += value;
+                const piece =
+                    board[r][c];
 
-            } else {
+                if (!piece) {
+                    continue;
+                }
 
-                score -= value;
+                const value =
+                    PIECE_VALUES[
+                        this.typeOf(piece)
+                    ];
+
+                const color =
+                    this.colorOf(piece);
+
+                if (
+                    color === aiColor
+                ) {
+
+                    score += value;
+
+                } else {
+
+                    score -= value;
+
+                }
+
+
+                /*
+                 * Center control
+                 */
+
+                if (
+                    r >= 2 &&
+                    r <= 5 &&
+                    c >= 2 &&
+                    c <= 5
+                ) {
+
+                    score +=
+                        color === aiColor
+                            ? 8
+                            : -8;
+
+                }
 
             }
 
         }
 
-    }
+        return score;
+
+    },
 
 
-    return score;
+    minimax(
+        board,
+        depth,
+        maximizingColor,
+        aiColor,
+        alpha = -Infinity,
+        beta = Infinity
+    ) {
 
-}
-
-
-function minimax(
-    position,
-    side,
-    depth,
-    alpha,
-    beta
-) {
-
-    const moves =
-        legalMoves(
-            position,
-            side
-        );
-
-
-    if (depth <= 0) {
-
-        return evaluate(
-            position
-        );
-
-    }
-
-
-    if (!moves.length) {
+        const moves =
+            this.getLegalMoves(
+                maximizingColor,
+                board
+            );
 
         if (
-            isInCheck(
-                position,
-                side
-            )
+            depth === 0 ||
+            moves.length === 0
         ) {
 
-            return side === "w"
-                ? -999999
-                : 999999;
+            if (
+                moves.length === 0 &&
+                this.isInCheck(
+                    board,
+                    maximizingColor
+                )
+            ) {
+
+                if (
+                    maximizingColor === aiColor
+                ) {
+
+                    return -999999;
+
+                }
+
+                return 999999;
+
+            }
+
+            return this.evaluateBoard(
+                board,
+                aiColor
+            );
 
         }
 
-        return 0;
 
-    }
+        const maximizing =
+            maximizingColor === aiColor;
 
 
-    if (side === "w") {
+        if (maximizing) {
 
-        let best = -Infinity;
+            let best =
+                -Infinity;
 
-        for (const move of moves) {
+            for (
+                const move of moves
+            ) {
 
-            const next =
-                applyMove(
-                    position,
-                    move
-                );
+                const next =
+                    this.makeMoveOnBoard(
+                        board,
+                        move
+                    );
 
-            best =
-                Math.max(
-                    best,
-                    minimax(
+                const score =
+                    this.minimax(
                         next,
-                        "b",
                         depth - 1,
+                        this.opposite(
+                            maximizingColor
+                        ),
+                        aiColor,
                         alpha,
                         beta
-                    )
-                );
+                    );
 
+                best =
+                    Math.max(
+                        best,
+                        score
+                    );
 
-            alpha =
-                Math.max(
-                    alpha,
-                    best
-                );
+                alpha =
+                    Math.max(
+                        alpha,
+                        best
+                    );
 
+                if (
+                    beta <= alpha
+                ) {
+                    break;
+                }
 
-            if (
-                beta <= alpha
-            ) {
-                break;
             }
+
+            return best;
 
         }
 
-        return best;
 
-    } else {
+        let best =
+            Infinity;
 
-        let best = Infinity;
-
-        for (const move of moves) {
+        for (
+            const move of moves
+        ) {
 
             const next =
-                applyMove(
-                    position,
+                this.makeMoveOnBoard(
+                    board,
                     move
+                );
+
+            const score =
+                this.minimax(
+                    next,
+                    depth - 1,
+                    this.opposite(
+                        maximizingColor
+                    ),
+                    aiColor,
+                    alpha,
+                    beta
                 );
 
             best =
                 Math.min(
                     best,
-                    minimax(
-                        next,
-                        "w",
-                        depth - 1,
-                        alpha,
-                        beta
-                    )
+                    score
                 );
-
 
             beta =
                 Math.min(
@@ -1576,7 +1829,6 @@ function minimax(
                     best
                 );
 
-
             if (
                 beta <= alpha
             ) {
@@ -1587,941 +1839,244 @@ function minimax(
 
         return best;
 
-    }
-
-}
+    },
 
 
-/* =========================================================
-   GAME STATUS
-========================================================= */
-
-function updateGameStatus() {
-
-    const status =
-        document.getElementById(
-            "gameStatus"
-        );
-
-    const turnText =
-        document.getElementById(
-            "turnText"
-        );
-
-
-    if (!status || !turnText) {
-        return;
-    }
-
-
-    if (turn === playerColor) {
-
-        status.textContent =
-            "Your turn";
-
-        turnText.textContent =
-            playerColor === "w"
-                ? "You are playing White"
-                : "You are playing Black";
-
-    } else {
-
-        status.textContent =
-            "Computer is thinking...";
-
-        turnText.textContent =
-            "Computer's turn";
-
-    }
-
-}
-
-
-/* =========================================================
-   CHECK GAME END
-========================================================= */
-
-function checkGameEnd() {
-
-    const moves =
-        legalMoves(
-            board,
-            turn
-        );
-
-
-    if (moves.length > 0) {
-
-        if (
-            isInCheck(
-                board,
-                turn
-            )
-        ) {
-
-            document.getElementById(
-                "gameStatus"
-            ).textContent =
-                "Check!";
-
-        }
-
-        return;
-
-    }
-
-
-    gameOver = true;
-
-
-    if (
-        isInCheck(
-            board,
-            turn
-        )
+    findBestMove(
+        difficulty
     ) {
 
-        const winner =
-            oppositeColor(turn);
-
+        const moves =
+            this.getLegalMoves(
+                this.computerColor
+            );
 
         if (
-            winner === playerColor
+            moves.length === 0
         ) {
-
-            finishGame(
-                "win",
-                "Checkmate!",
-                "You won the game."
-            );
-
-        } else {
-
-            finishGame(
-                "loss",
-                "Checkmate!",
-                "The computer won the game."
-            );
-
+            return null;
         }
 
-    } else {
 
-        finishGame(
-            "draw",
-            "Draw",
-            "The game ended in a draw."
-        );
-
-    }
-
-
-    if (
-        window.stopChessClock
-    ) {
-
-        window.stopChessClock();
-
-    }
-
-}
-
-
-/* =========================================================
-   MOVE HISTORY
-========================================================= */
-
-function updateMoveHistory() {
-
-    const container =
-        document.getElementById(
-            "moveHistory"
-        );
-
-    const count =
-        document.getElementById(
-            "moveCount"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    container.innerHTML = "";
-
-
-    if (!moveHistory.length) {
-
-        container.innerHTML =
-            '<div class="empty-moves">No moves yet.</div>';
-
-        if (count) {
-            count.textContent = "0";
-        }
-
-        return;
-    }
-
-
-    for (
-        let i = 0;
-        i < moveHistory.length;
-        i += 2
-    ) {
-
-        const row =
-            document.createElement(
-                "div"
-            );
-
-        row.className =
-            "move-row";
-
-
-        const number =
-            document.createElement(
-                "span"
-            );
-
-        number.className =
-            "move-number";
-
-        number.textContent =
-            `${Math.floor(i / 2) + 1}.`;
-
-
-        const white =
-            document.createElement(
-                "span"
-            );
-
-        white.className =
-            "move";
-
-
-        const whiteMove =
-            moveHistory[i];
-
-        white.textContent =
-            `${whiteMove.from}-${whiteMove.to}`;
-
-
-        const black =
-            document.createElement(
-                "span"
-            );
-
-        black.className =
-            "move";
-
+        /*
+         * Beginner:
+         * random legal move
+         */
 
         if (
-            moveHistory[i + 1]
+            difficulty === 1
         ) {
 
-            const blackMove =
-                moveHistory[i + 1];
-
-            black.textContent =
-                `${blackMove.from}-${blackMove.to}`;
+            return moves[
+                Math.floor(
+                    Math.random() *
+                    moves.length
+                )
+            ];
 
         }
 
 
-        row.appendChild(number);
+        /*
+         * Easy:
+         * prefer captures
+         */
 
-        row.appendChild(white);
+        if (
+            difficulty === 2
+        ) {
 
-        row.appendChild(black);
-
-        container.appendChild(row);
-
-    }
-
-
-    if (count) {
-
-        count.textContent =
-            moveHistory.length;
-
-    }
-
-
-    container.scrollTop =
-        container.scrollHeight;
-
-}
-
-
-/* =========================================================
-   CAPTURED PIECES
-========================================================= */
-
-function updateCaptured() {
-
-    const container =
-        document.getElementById(
-            "capturedPieces"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    if (!capturedPieces.length) {
-
-        container.innerHTML =
-            '<span class="captured-label">None</span>';
-
-        return;
-
-    }
-
-
-    container.innerHTML = "";
-
-
-    capturedPieces.forEach(
-        piece => {
-
-            const span =
-                document.createElement(
-                    "span"
+            const captures =
+                moves.filter(
+                    move =>
+                        this.board[
+                            move.to.r
+                        ][
+                            move.to.c
+                        ] !== null
                 );
 
-            span.className =
-                "captured-piece " +
-                (
-                    pieceColor(piece)
-                    === "w"
-                        ? "white"
-                        : "black"
-                );
+            if (
+                captures.length
+            ) {
 
-            span.textContent =
-                PIECES[
-                    pieceColor(piece)
-                ][
-                    piece.toUpperCase()
+                return captures[
+                    Math.floor(
+                        Math.random() *
+                        captures.length
+                    )
                 ];
 
-            container.appendChild(
-                span
-            );
+            }
+
+            return moves[
+                Math.floor(
+                    Math.random() *
+                    moves.length
+                )
+            ];
 
         }
-    );
 
-}
 
+        /*
+         * Medium / Hard
+         */
 
-/* =========================================================
-   START NEW GAME
-========================================================= */
+        const depth =
+            difficulty === 3
+                ? 2
+                : 3;
 
-function newGame(
-    selectedColor = playerColor
-) {
+        let bestScore =
+            -Infinity;
 
-    playerColor =
-        selectedColor === "b"
-            ? "b"
-            : "w";
+        let bestMoves = [];
 
-
-    computerColor =
-        oppositeColor(
-            playerColor
-        );
-
-
-    difficulty =
-        Number(
-            document.getElementById(
-                "difficulty"
-            )?.value || 3
-        );
-
-
-    board =
-        createInitialBoard();
-
-
-    turn = "w";
-
-    selectedSquare = null;
-
-    legalMovesForSelected = [];
-
-    gameOver = false;
-
-    moveHistory = [];
-
-    positionHistory = [];
-
-    capturedPieces = [];
-
-
-    renderBoard();
-
-    updateMoveHistory();
-
-    updateCaptured();
-
-    updateGameStatus();
-
-
-    updatePlayerInterface();
-
-
-    if (
-        window.resetChessClock
-    ) {
-
-        window.resetChessClock();
-
-    }
-
-
-    /*
-       IMPORTANT:
-       If user chooses BLACK, the computer
-       must make the first move because
-       White always moves first.
-    */
-
-    if (
-        playerColor === "b"
-    ) {
-
-        setTimeout(
-            computerMove,
-            500
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   UPDATE PLAYER INTERFACE
-========================================================= */
-
-function updatePlayerInterface() {
-
-    const colorText =
-        document.getElementById(
-            "playerColorText"
-        );
-
-
-    const playerAvatar =
-        document.querySelector(
-            ".user-avatar"
-        );
-
-
-    if (
-        colorText
-    ) {
-
-        colorText.textContent =
-            playerColor === "w"
-                ? "White"
-                : "Black";
-
-    }
-
-
-    if (
-        playerAvatar
-    ) {
-
-        playerAvatar.textContent =
-            playerColor === "w"
-                ? "♔"
-                : "♚";
-
-    }
-
-
-    const computerAvatar =
-        document.querySelector(
-            ".computer-avatar"
-        );
-
-
-    if (
-        computerAvatar
-    ) {
-
-        computerAvatar.textContent =
-            computerColor === "w"
-                ? "♔"
-                : "♚";
-
-    }
-
-
-    const computerRating =
-        document.getElementById(
-            "computerRating"
-        );
-
-
-    if (
-        computerRating
-    ) {
-
-        computerRating.textContent =
-            `Level ${difficulty} • Engine`;
-
-    }
-
-}
-
-
-/* =========================================================
-   UNDO
-========================================================= */
-
-function undoMove() {
-
-    if (
-        gameOver ||
-        !positionHistory.length
-    ) {
-        return;
-    }
-
-
-    /*
-       When playing against computer,
-       undo both the computer move and
-       your previous move.
-    */
-
-    if (
-        playerColor !== turn &&
-        positionHistory.length >= 1
-    ) {
-
-        board =
-            positionHistory.pop();
-
-        if (
-            moveHistory.length
+        for (
+            const move of moves
         ) {
 
-            moveHistory.pop();
+            const next =
+                this.makeMoveOnBoard(
+                    this.board,
+                    move
+                );
 
-        }
-
-    }
-
-
-    if (
-        playerColor === turn &&
-        positionHistory.length >= 1
-    ) {
-
-        board =
-            positionHistory.pop();
-
-        if (
-            moveHistory.length
-        ) {
-
-            moveHistory.pop();
-
-        }
-
-    }
+            const score =
+                this.minimax(
+                    next,
+                    depth - 1,
+                    this.playerColor,
+                    this.computerColor
+                );
 
 
-    turn =
-        playerColor;
+            if (
+                score > bestScore
+            ) {
 
+                bestScore = score;
 
-    selectedSquare = null;
+                bestMoves = [
+                    move
+                ];
 
-    legalMovesForSelected = [];
+            } else if (
+                score === bestScore
+            ) {
 
-    capturedPieces = [];
+                bestMoves.push(
+                    move
+                );
 
-
-    rebuildCaptured();
-
-    renderBoard();
-
-    updateMoveHistory();
-
-    updateCaptured();
-
-    updateGameStatus();
-
-
-    if (
-        window.resetChessClock
-    ) {
-
-        window.resetChessClock();
-
-    }
-
-}
-
-
-/* =========================================================
-   REBUILD CAPTURED
-========================================================= */
-
-function rebuildCaptured() {
-
-    capturedPieces = [];
-
-
-    const starting = [
-
-        "r",
-        "n",
-        "b",
-        "q",
-        "k",
-        "b",
-        "n",
-        "r",
-
-        "p",
-        "p",
-        "p",
-        "p",
-        "p",
-        "p",
-        "p",
-        "p",
-
-        "P",
-        "P",
-        "P",
-        "P",
-        "P",
-        "P",
-        "P",
-        "P",
-
-        "R",
-        "N",
-        "B",
-        "Q",
-        "K",
-        "B",
-        "N",
-        "R"
-
-    ];
-
-
-    const current = [];
-
-    for (const row of board) {
-
-        for (const piece of row) {
-
-            if (piece) {
-                current.push(piece);
             }
 
         }
 
-    }
+
+        return bestMoves[
+            Math.floor(
+                Math.random() *
+                bestMoves.length
+            )
+        ];
+
+    },
 
 
-    const remaining =
-        [...current];
+    moveNotation(move, boardBefore) {
 
+        const piece =
+            boardBefore[
+                move.from.r
+            ][
+                move.from.c
+            ];
 
-    for (
-        const piece
-        of starting
-    ) {
+        const type =
+            this.typeOf(piece);
 
-        const index =
-            remaining.indexOf(
-                piece
-            );
+        let notation = "";
 
         if (
-            index >= 0
+            type !== "p"
         ) {
 
-            remaining.splice(
-                index,
-                1
-            );
-
-        } else {
-
-            capturedPieces.push(
-                piece
-            );
+            notation +=
+                type.toUpperCase();
 
         }
 
-    }
 
-}
+        if (
+            move.castle === "K"
+        ) {
 
+            return "O-O";
 
-/* =========================================================
-   RESIGN
-========================================================= */
+        }
 
-function resignGame() {
+        if (
+            move.castle === "Q"
+        ) {
 
-    if (gameOver) {
-        return;
-    }
+            return "O-O-O";
 
-
-    finishGame(
-        "loss",
-        "You Resigned",
-        "The game has been resigned."
-    );
-
-}
+        }
 
 
-/* =========================================================
-   FINISH GAME
-========================================================= */
-
-function finishGame(
-    result,
-    title,
-    message
-) {
-
-    gameOver = true;
+        const capture =
+            move.enPassant ||
+            boardBefore[
+                move.to.r
+            ][
+                move.to.c
+            ] !== null;
 
 
-    if (
-        window.stopChessClock
-    ) {
+        if (
+            type === "p" &&
+            capture
+        ) {
 
-        window.stopChessClock();
+            notation +=
+                FILES[
+                    move.from.c
+                ];
 
-    }
-
-
-    saveResult(
-        result
-    );
-
-
-    const modal =
-        document.getElementById(
-            "gameModal"
-        );
-
-    const modalTitle =
-        document.getElementById(
-            "modalTitle"
-        );
-
-    const modalMessage =
-        document.getElementById(
-            "modalMessage"
-        );
-
-    const modalIcon =
-        document.getElementById(
-            "modalIcon"
-        );
+        }
 
 
-    if (
-        modalTitle
-    ) {
+        if (capture) {
 
-        modalTitle.textContent =
-            title;
+            notation += "x";
+
+        }
+
+
+        notation +=
+            this.squareName(
+                move.to.r,
+                move.to.c
+            );
+
+
+        if (
+            move.promotion
+        ) {
+
+            notation +=
+                "=" +
+                move.promotion.toUpperCase();
+
+        }
+
+        return notation;
 
     }
 
-
-    if (
-        modalMessage
-    ) {
-
-        modalMessage.textContent =
-            message;
-
-    }
+};
 
 
-    if (
-        modalIcon
-    ) {
-
-        modalIcon.textContent =
-            result === "win"
-                ? "♛"
-                : result === "draw"
-                    ? "½"
-                    : "♟";
-
-    }
-
-
-    if (
-        modal
-    ) {
-
-        modal.classList.add(
-            "show"
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   SAVE STATISTICS
-========================================================= */
-
-function saveResult(
-    result
-) {
-
-    const stats =
-        JSON.parse(
-            localStorage.getItem(
-                "chessStats"
-            ) ||
-            '{"games":0,"wins":0,"losses":0,"draws":0}'
-        );
-
-
-    stats.games++;
-
-
-    if (
-        result === "win"
-    ) {
-        stats.wins++;
-    }
-
-    if (
-        result === "loss"
-    ) {
-        stats.losses++;
-    }
-
-    if (
-        result === "draw"
-    ) {
-        stats.draws++;
-    }
-
-
-    localStorage.setItem(
-        "chessStats",
-        JSON.stringify(stats)
-    );
-
-
-    updateStatistics();
-
-}
-
-
-function updateStatistics() {
-
-    const stats =
-        JSON.parse(
-            localStorage.getItem(
-                "chessStats"
-            ) ||
-            '{"games":0,"wins":0,"losses":0,"draws":0}'
-        );
-
-
-    document.getElementById(
-        "games"
-    ).textContent =
-        stats.games;
-
-
-    document.getElementById(
-        "wins"
-    ).textContent =
-        stats.wins;
-
-
-    document.getElementById(
-        "losses"
-    ).textContent =
-        stats.losses;
-
-
-    document.getElementById(
-        "draws"
-    ).textContent =
-        stats.draws;
-
-}
-
-
-/* =========================================================
-   FLIP BOARD
-========================================================= */
-
-function flipBoard() {
-
-    boardFlipped =
-        !boardFlipped;
-
-    renderBoard();
-
-}
-
-
-/* =========================================================
-   EXPORTS
-========================================================= */
-
-window.newGame =
-    newGame;
-
-window.undoMove =
-    undoMove;
-
-window.resignGame =
-    resignGame;
-
-window.flipBoard =
-    flipBoard;
-
-
-/* =========================================================
-   INITIAL
-========================================================= */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-
-        updateStatistics();
-
-        newGame("w");
-
-    }
-);
+window.ChessGame = ChessGame;
