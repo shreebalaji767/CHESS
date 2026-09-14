@@ -10,12 +10,12 @@
 
     <meta
         name="theme-color"
-        content="#171512"
+        content="#312e2b"
     >
 
     <meta
         name="description"
-        content="Chess Master - Play chess online against the computer and learn chess."
+        content="Chess Academy - Play chess against the computer and learn chess from beginner to master."
     >
 
     <link
@@ -28,14 +28,10 @@
         href="{{ url_for('static', filename='css/style.css') }}"
     >
 
-    <title>Chess Master</title>
+    <title>Chess Academy</title>
 </head>
 
 <body>
-
-<!-- =========================================================
-     TOP HEADER
-========================================================= -->
 
 <header class="top-header">
 
@@ -46,43 +42,24 @@
         </div>
 
         <div>
-            <div class="brand-name">
-                Chess Master
-            </div>
-
-            <div class="brand-subtitle">
-                Play • Learn • Improve
-            </div>
+            <h1>Chess Academy</h1>
+            <p>Play • Learn • Improve</p>
         </div>
 
     </div>
 
-
-    <div class="header-actions">
-
-        <button
-            id="installButton"
-            class="header-button install-button"
-            style="display:none;"
-        >
-            Install App
-        </button>
-
-        <div class="online-status">
-            <span class="online-dot"></span>
-            Online
-        </div>
-
-    </div>
+    <button
+        id="installButton"
+        class="install-button"
+        hidden
+    >
+        Install App
+    </button>
 
 </header>
 
 
-<!-- =========================================================
-     NAVIGATION
-========================================================= -->
-
-<nav class="main-navigation">
+<nav class="main-nav">
 
     <button
         class="nav-button active"
@@ -95,22 +72,18 @@
         class="nav-button"
         data-section="academy"
     >
-        🎓 Chess Academy
+        🎓 Academy
     </button>
 
 </nav>
 
 
-<!-- =========================================================
-     MAIN CONTENT
-========================================================= -->
-
 <main>
 
 
-<!-- =========================================================
+<!-- =====================================================
      PLAY SECTION
-========================================================= -->
+===================================================== -->
 
 <section
     id="play"
@@ -120,19 +93,17 @@
     <div class="page-heading">
 
         <div>
+            <span class="eyebrow">
+                COMPUTER CHESS
+            </span>
 
-            <div class="eyebrow">
-                QUICK PLAY
-            </div>
-
-            <h1>
+            <h2>
                 Play Chess
-            </h1>
+            </h2>
 
             <p>
-                Challenge the computer and improve your game.
+                Choose your side, select a difficulty and start playing.
             </p>
-
         </div>
 
     </div>
@@ -142,39 +113,35 @@
 
 
         <!-- =================================================
-             LEFT / BOARD AREA
+             LEFT GAME AREA
         ================================================== -->
 
-        <div class="board-column">
+        <div class="game-main">
 
 
             <!-- PLAYER TOP -->
 
-            <div class="player-card opponent-card">
+            <div class="player-bar computer-player">
 
-                <div class="player-information">
+                <div class="player-avatar">
+                    ♚
+                </div>
 
-                    <div class="player-avatar computer-avatar">
-                        ♟
-                    </div>
+                <div class="player-info">
 
-                    <div>
+                    <strong>
+                        Computer
+                    </strong>
 
-                        <strong id="computerName">
-                            Computer
-                        </strong>
-
-                        <span id="computerRating">
-                            Level 3 • Engine
-                        </span>
-
-                    </div>
+                    <span id="computerLabel">
+                        AI Opponent
+                    </span>
 
                 </div>
 
                 <div
-                    id="blackClock"
-                    class="chess-clock"
+                    id="computerClock"
+                    class="clock"
                 >
                     10:00
                 </div>
@@ -184,25 +151,12 @@
 
             <!-- BOARD -->
 
-            <div class="board-area">
+            <div class="board-wrapper">
 
-                <div class="evaluation-bar">
-
-                    <div
-                        id="evaluationFill"
-                        class="evaluation-fill"
-                    ></div>
-
-                </div>
-
-
-                <div class="board-frame">
-
-                    <div
-                        id="chessBoard"
-                        class="chess-board"
-                    ></div>
-
+                <div
+                    id="chessBoard"
+                    class="chess-board"
+                >
                 </div>
 
             </div>
@@ -210,31 +164,27 @@
 
             <!-- PLAYER BOTTOM -->
 
-            <div class="player-card user-card">
+            <div class="player-bar human-player">
 
-                <div class="player-information">
+                <div class="player-avatar human">
+                    ♙
+                </div>
 
-                    <div class="player-avatar user-avatar">
-                        ♔
-                    </div>
+                <div class="player-info">
 
-                    <div>
+                    <strong>
+                        You
+                    </strong>
 
-                        <strong id="playerName">
-                            You
-                        </strong>
-
-                        <span id="playerColorText">
-                            White
-                        </span>
-
-                    </div>
+                    <span id="playerLabel">
+                        White
+                    </span>
 
                 </div>
 
                 <div
-                    id="whiteClock"
-                    class="chess-clock active-clock"
+                    id="playerClock"
+                    class="clock active-clock"
                 >
                     10:00
                 </div>
@@ -242,37 +192,39 @@
             </div>
 
 
-            <!-- GAME CONTROLS -->
+            <!-- GAME STATUS -->
 
-            <div class="board-controls">
+            <div
+                id="gameStatus"
+                class="game-status"
+            >
+                Your turn
+            </div>
+
+
+            <!-- CONTROLS -->
+
+            <div class="game-controls">
 
                 <button
                     id="newGame"
-                    class="control-button primary"
+                    class="primary-button"
                 >
-                    <span>＋</span>
                     New Game
                 </button>
 
                 <button
                     id="undoMove"
-                    class="control-button"
+                    class="secondary-button"
                 >
-                    ↶ Undo
-                </button>
-
-                <button
-                    id="flipBoard"
-                    class="control-button"
-                >
-                    ⇅ Flip
+                    Undo
                 </button>
 
                 <button
                     id="resignGame"
-                    class="control-button danger"
+                    class="danger-button"
                 >
-                    ⚑ Resign
+                    Resign
                 </button>
 
             </div>
@@ -287,79 +239,64 @@
         <aside class="game-sidebar">
 
 
-            <!-- GAME SETUP -->
+            <!-- SETTINGS -->
 
-            <div class="sidebar-card">
+            <div class="panel">
 
-                <div class="sidebar-title">
-                    <span>⚙</span>
-                    Game Setup
+                <div class="panel-title">
+                    <span>Game Settings</span>
                 </div>
 
 
-                <label>
+                <label
+                    class="field-label"
+                    for="playerColor"
+                >
                     Play As
                 </label>
 
-                <div class="color-selector">
+                <select
+                    id="playerColor"
+                    class="select-input"
+                >
 
-                    <button
-                        class="color-choice active"
-                        data-color="w"
-                    >
-                        <span class="mini-piece white-mini">
-                            ♔
-                        </span>
+                    <option value="w">
+                        White
+                    </option>
 
-                        <span>
-                            White
-                        </span>
-                    </button>
+                    <option value="b">
+                        Black
+                    </option>
 
-
-                    <button
-                        class="color-choice"
-                        data-color="b"
-                    >
-                        <span class="mini-piece black-mini">
-                            ♚
-                        </span>
-
-                        <span>
-                            Black
-                        </span>
-                    </button>
-
-                </div>
+                </select>
 
 
-                <label for="difficulty">
-                    Computer Level
+                <label
+                    class="field-label"
+                    for="difficulty"
+                >
+                    Difficulty
                 </label>
 
-                <select id="difficulty">
+                <select
+                    id="difficulty"
+                    class="select-input"
+                >
 
                     <option value="1">
-                        Level 1 — Beginner
+                        Beginner
                     </option>
 
                     <option value="2">
-                        Level 2 — Easy
+                        Easy
                     </option>
 
-                    <option
-                        value="3"
-                        selected
-                    >
-                        Level 3 — Intermediate
+                    <option value="3" selected>
+                        Medium
                     </option>
 
                     <option value="4">
-                        Level 4 — Strong
-                    </option>
-
-                    <option value="5">
-                        Level 5 — Expert
+                        Hard
                     </option>
 
                 </select>
@@ -367,69 +304,42 @@
 
                 <button
                     id="startGame"
-                    class="start-game-button"
+                    class="play-button"
                 >
-                    ▶ Start Game
+                    ▶ PLAY GAME
                 </button>
 
             </div>
 
 
-            <!-- STATUS -->
+            <!-- STATS -->
 
-            <div class="sidebar-card status-card">
+            <div class="panel">
 
-                <div class="sidebar-title">
-                    <span>●</span>
-                    Game Status
+                <div class="panel-title">
+                    Statistics
                 </div>
 
-                <div
-                    id="gameStatus"
-                    class="game-status"
-                >
-                    Ready to play
-                </div>
+                <div class="stats-grid">
 
-                <div
-                    id="turnText"
-                    class="turn-text"
-                >
-                    Your turn
-                </div>
+                    <div class="stat-box">
+                        <strong id="games">0</strong>
+                        <span>Games</span>
+                    </div>
 
-            </div>
+                    <div class="stat-box">
+                        <strong id="wins">0</strong>
+                        <span>Wins</span>
+                    </div>
 
+                    <div class="stat-box">
+                        <strong id="losses">0</strong>
+                        <span>Losses</span>
+                    </div>
 
-            <!-- MOVES -->
-
-            <div class="sidebar-card moves-card">
-
-                <div class="sidebar-title">
-
-                    <span>
-                        ☰
-                    </span>
-
-                    Moves
-
-                    <span
-                        id="moveCount"
-                        class="move-count"
-                    >
-                        0
-                    </span>
-
-                </div>
-
-
-                <div
-                    id="moveHistory"
-                    class="move-history"
-                >
-
-                    <div class="empty-moves">
-                        No moves yet.
+                    <div class="stat-box">
+                        <strong id="draws">0</strong>
+                        <span>Draws</span>
                     </div>
 
                 </div>
@@ -439,72 +349,37 @@
 
             <!-- MATERIAL -->
 
-            <div class="sidebar-card">
+            <div class="panel">
 
-                <div class="sidebar-title">
-                    <span>♜</span>
-                    Captured
+                <div class="panel-title">
+                    Material
                 </div>
 
                 <div
-                    id="capturedPieces"
-                    class="captured-pieces"
+                    id="materialDisplay"
+                    class="material-display"
                 >
-                    <span class="captured-label">
-                        None
-                    </span>
+                    Material equal
                 </div>
 
             </div>
 
 
-            <!-- STATISTICS -->
+            <!-- MOVE HISTORY -->
 
-            <div class="sidebar-card">
+            <div class="panel moves-panel">
 
-                <div class="sidebar-title">
-                    <span>◈</span>
-                    Statistics
+                <div class="panel-title">
+                    Moves
                 </div>
 
-                <div class="statistics">
-
-                    <div>
-                        <strong id="games">
-                            0
-                        </strong>
-                        <span>
-                            Games
-                        </span>
+                <div
+                    id="moveHistory"
+                    class="move-history"
+                >
+                    <div class="empty-moves">
+                        No moves yet
                     </div>
-
-                    <div>
-                        <strong id="wins">
-                            0
-                        </strong>
-                        <span>
-                            Wins
-                        </span>
-                    </div>
-
-                    <div>
-                        <strong id="losses">
-                            0
-                        </strong>
-                        <span>
-                            Losses
-                        </span>
-                    </div>
-
-                    <div>
-                        <strong id="draws">
-                            0
-                        </strong>
-                        <span>
-                            Draws
-                        </span>
-                    </div>
-
                 </div>
 
             </div>
@@ -516,51 +391,57 @@
 </section>
 
 
-<!-- =========================================================
-     CHESS ACADEMY
-========================================================= -->
+<!-- =====================================================
+     ACADEMY SECTION
+===================================================== -->
 
 <section
     id="academy"
     class="section"
 >
 
-    <div class="academy-hero">
+    <div class="page-heading">
 
         <div>
 
-            <div class="eyebrow">
-                CHESS ACADEMY
-            </div>
+            <span class="eyebrow">
+                CHESS EDUCATION
+            </span>
 
-            <h1>
-                Learn Chess From Zero to Master
-            </h1>
+            <h2>
+                Chess Academy
+            </h2>
 
             <p>
-                Follow structured lessons and build your chess
-                knowledge step by step.
+                Start from zero and progress toward advanced chess.
             </p>
 
         </div>
 
+    </div>
 
-        <div class="academy-progress">
 
-            <span>
+    <div class="academy-progress">
+
+        <div class="progress-header">
+
+            <strong>
                 Your Progress
-            </span>
-
-            <strong id="academyProgressText">
-                0%
             </strong>
 
-            <div class="progress-bar">
-                <div
-                    id="academyProgress"
-                    class="progress-fill"
-                    style="width:0%;"
-                ></div>
+            <span id="academyProgressText">
+                0%
+            </span>
+
+        </div>
+
+        <div class="progress-track">
+
+            <div
+                id="academyProgressBar"
+                class="progress-bar"
+                style="width:0%"
+            >
             </div>
 
         </div>
@@ -579,37 +460,32 @@
 </main>
 
 
-<!-- =========================================================
-     MODAL
-========================================================= -->
+<!-- LESSON MODAL -->
 
 <div
-    id="gameModal"
-    class="modal"
+    id="lessonModal"
+    class="modal hidden"
 >
 
     <div class="modal-box">
 
-        <div
-            id="modalIcon"
-            class="modal-icon"
+        <button
+            id="closeLesson"
+            class="modal-close"
         >
-            ♛
+            ×
+        </button>
+
+        <div
+            id="lessonContent"
+        >
         </div>
 
-        <h2 id="modalTitle">
-            Game Over
-        </h2>
-
-        <p id="modalMessage">
-            Game finished.
-        </p>
-
         <button
-            id="modalNewGame"
-            class="start-game-button"
+            id="completeLesson"
+            class="primary-button lesson-complete-button"
         >
-            Play Again
+            Mark Lesson Complete
         </button>
 
     </div>
@@ -619,6 +495,10 @@
 
 <script
     src="{{ url_for('static', filename='js/chess.js') }}"
+></script>
+
+<script
+    src="{{ url_for('static', filename='js/academy.js') }}"
 ></script>
 
 <script
