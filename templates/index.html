@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color"
+          content="#111827">
+
+    <meta name="description"
+          content="Chess Master - Play and learn chess from zero to master">
+
+    <link rel="manifest"
+          href="/static/manifest.json">
+
+    <link rel="stylesheet"
+          href="/static/css/style.css">
+
+    <title>Chess Master</title>
+</head>
+
+<body>
+
+<header class="header">
+
+    <div>
+        <h1>♟ Chess Master</h1>
+        <p>Play • Learn • Improve</p>
+    </div>
+
+    <button id="installButton"
+            class="install-button"
+            hidden>
+        Install App
+    </button>
+
+</header>
+
+
+<nav class="navigation">
+
+    <button class="nav-button active"
+            data-section="play">
+        ♟ Quick Play
+    </button>
+
+    <button class="nav-button"
+            data-section="academy">
+        📚 Chess Academy
+    </button>
+
+    <button class="nav-button"
+            data-section="puzzles">
+        🧩 Puzzles
+    </button>
+
+</nav>
+
+
+<main>
+
+<!-- ================= PLAY ================= -->
+
+<section id="play"
+         class="section active">
+
+    <div class="game-layout">
+
+        <div class="game-card">
+
+            <div class="game-header">
+
+                <div>
+                    <strong id="gameStatus">
+                        Your Turn
+                    </strong>
+
+                    <small id="turnText">
+                        White
+                    </small>
+                </div>
+
+                <select id="difficulty">
+
+                    <option value="1">
+                        Beginner
+                    </option>
+
+                    <option value="2">
+                        Easy
+                    </option>
+
+                    <option value="3">
+                        Normal
+                    </option>
+
+                    <option value="3">
+                        Intermediate
+                    </option>
+
+                    <option value="4">
+                        Advanced
+                    </option>
+
+                    <option value="4">
+                        Expert
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div id="chessBoard"
+                 class="chess-board">
+            </div>
+
+
+            <div class="game-controls">
+
+                <button id="newGame">
+                    New Game
+                </button>
+
+                <button id="undoMove"
+                        class="secondary">
+                    Undo
+                </button>
+
+                <button id="resignGame"
+                        class="danger">
+                    Resign
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <aside>
+
+            <div class="card">
+
+                <h2>Statistics</h2>
+
+                <div class="statistics">
+
+                    <div>
+                        <span>Games</span>
+                        <b id="games">0</b>
+                    </div>
+
+                    <div>
+                        <span>Wins</span>
+                        <b id="wins">0</b>
+                    </div>
+
+                    <div>
+                        <span>Losses</span>
+                        <b id="losses">0</b>
+                    </div>
+
+                    <div>
+                        <span>Draws</span>
+                        <b id="draws">0</b>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h2>Move History</h2>
+
+                <div id="moveHistory"
+                     class="move-history">
+                    No moves yet.
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ACADEMY ================= -->
+
+<section id="academy"
+         class="section">
+
+    <div class="card academy">
+
+        <h2>📚 Chess Academy</h2>
+
+        <p>
+            Learn chess from absolute beginner
+            to advanced/master level.
+        </p>
+
+        <div id="lessonContainer"
+             class="lesson-grid">
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ================= PUZZLES ================= -->
+
+<section id="puzzles"
+         class="section">
+
+    <div class="card">
+
+        <h2>🧩 Chess Puzzles</h2>
+
+        <p>
+            Train your tactical thinking.
+        </p>
+
+        <div class="puzzle-box">
+
+            <h3>Beginner Tactical Checklist</h3>
+
+            <p>
+                Before making a move, look for:
+            </p>
+
+            <ol>
+                <li>Checks</li>
+                <li>Captures</li>
+                <li>Threats</li>
+                <li>Opponent's threats</li>
+            </ol>
+
+            <button id="completePuzzle">
+                Complete Puzzle
+            </button>
+
+            <p id="puzzleStatus"></p>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<script src="/static/js/chess.js"></script>
+<script src="/static/js/academy.js"></script>
+<script src="/static/js/app.js"></script>
+
+</body>
+</html>
