@@ -1,14 +1,1 @@
-{
-  "name": "CHESS — Chess Academy",
-  "short_name": "CHESS",
-  "description": "Play chess against the computer and learn chess from beginner to master.",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
-  "background_color": "#111827",
-  "theme_color": "#111827",
-  "orientation": "any",
-  "lang": "en",
-  "categories": ["games", "education"],
-  "icons": [{"src": "/static/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
-}
+{"name":"CHESS — Shree Balaji","short_name":"CHESS","description":"Play chess, learn chess and improve your game with CHESS by Shree Balaji.","start_url":"/?source=pwa","scope":"/","display":"standalone","orientation":"any","background_color":"#111827","theme_color":"#111827","lang":"en-IN","categories":["games","education"],"icons":[{"src":"/static/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
