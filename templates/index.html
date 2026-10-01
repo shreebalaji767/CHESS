@@ -8,13 +8,18 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     >
 
-    <meta name="theme-color" content="#111827">
+    <meta name="theme-color" content="#111827" id="themeColorMeta">
     <meta
         name="description"
-        content="Professional Chess Game and Chess Academy"
+        content="CHESS — play chess against the computer and learn chess from beginner to master."
     >
 
-    <title>Chess Academy</title>
+    <title>CHESS — Chess Academy</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='icons/icon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}">
+    <meta name="application-name" content="CHESS">
+    <meta name="mobile-web-app-capable" content="yes">
 
     <link
         rel="manifest"
@@ -24,6 +29,11 @@
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/enhancements.css') }}"
     >
 </head>
 
@@ -851,6 +861,10 @@
 
 <script
     src="{{ url_for('static', filename='js/app.js') }}"
+></script>
+
+<script
+    src="{{ url_for('static', filename='js/enhancements.js') }}"
 ></script>
 
 </body>
