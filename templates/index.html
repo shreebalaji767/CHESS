@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#111827"><meta name="application-name" content="CHESS — Shree Balaji"><meta name="apple-mobile-web-app-title" content="CHESS"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="description" content="Play chess, learn chess and improve your game with CHESS by Shree Balaji."><meta name="keywords" content="chess, online chess, chess game, chess academy, chess learning, Shree Balaji"><meta name="author" content="Shree Balaji"><meta name="robots" content="index, follow"><meta property="og:type" content="website"><meta property="og:title" content="CHESS — Shree Balaji"><meta property="og:description" content="Play chess and learn chess in the CHESS Academy."><meta property="og:image" content="{{ url_for('static', filename='icons/icon.svg', _external=True) }}"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="CHESS — Shree Balaji"><meta name="twitter:description" content="Play chess and learn chess with Shree Balaji."><link rel="canonical" href="{{ request.base_url }}"><link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}"><link rel="icon" href="{{ url_for('static', filename='icons/icon.svg') }}" type="image/svg+xml"><link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}"><title>CHESS — Shree Balaji | Play & Learn Chess</title><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"CHESS — Shree Balaji","applicationCategory":"GameApplication","operatingSystem":"Web","description":"Play chess and learn chess with an integrated Chess Academy.","author":{"@type":"Organization","name":"Shree Balaji"},"identifier":"BLSSNVJ21","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"}}</script>
+<head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#111827" id="themeColorMeta">
-    <meta
-        name="description"
-        content="CHESS — play chess against the computer and learn chess from beginner to master."
-    >
-
-    <title>CHESS — Chess Academy</title>
-
-    <link rel="icon" href="{{ url_for('static', filename='icons/icon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}">
-    <meta name="application-name" content="CHESS">
+    <meta name="application-name" content="CHESS — Shree Balaji">
+    <meta name="application-id" content="BLSSNVJ21">
+    <meta name="identifier" content="BLSSNVJ21">
+    <meta name="apple-mobile-web-app-title" content="CHESS">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-
-    <link
-        rel="manifest"
-        href="{{ url_for('static', filename='manifest.json') }}"
-    >
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
-
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/enhancements.css') }}"
-    >
+    <meta name="description" content="Play chess, learn chess and improve your game with CHESS by Shree Balaji.">
+    <meta name="keywords" content="chess, online chess, chess game, chess academy, chess learning, chess tactics, Shree Balaji">
+    <meta name="author" content="Shree Balaji">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="CHESS — Shree Balaji | Play & Learn Chess">
+    <meta property="og:description" content="Play chess against the computer and learn chess from beginner to master.">
+    <meta property="og:url" content="{{ request.base_url }}">
+    <meta property="og:site_name" content="CHESS — Shree Balaji">
+    <meta property="og:image" content="{{ url_for('static', filename='icons/icon.svg', _external=True) }}">
+    <meta property="og:image:alt" content="CHESS — Shree Balaji logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="CHESS — Shree Balaji | Play & Learn Chess">
+    <meta name="twitter:description" content="Play chess and learn chess with Shree Balaji.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='icons/icon.svg', _external=True) }}">
+    <link rel="canonical" href="{{ request.base_url }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" href="{{ url_for('static', filename='icons/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon.svg') }}">
+    <title>CHESS — Shree Balaji | Play & Learn Chess</title>
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"WebApplication","name":"CHESS — Shree Balaji","applicationCategory":"GameApplication","operatingSystem":"Web","description":"Play chess and learn chess with an integrated Chess Academy.","url":"{{ request.base_url }}","author":{"@type":"Organization","name":"Shree Balaji"},"identifier":"BLSSNVJ21","offers":{"@type":"Offer","price":"0","priceCurrency":"INR"}}
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
 </head>
 
 <body>
