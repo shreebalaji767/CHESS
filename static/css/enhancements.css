@@ -1,15 +1,10 @@
-/* Progressive UI upgrades */
-.theme-toggle{min-height:34px;padding:0 10px;margin-right:8px;border:1px solid #777;border-radius:4px;background:transparent;color:#fff;font-size:10px;font-weight:800;letter-spacing:.6px;cursor:pointer}.theme-toggle:hover{background:#303030}
-.connection-status{position:fixed;right:14px;bottom:14px;z-index:5000;padding:7px 10px;border-radius:999px;background:#1f2937;color:#fff;font:800 10px/1 system-ui,sans-serif;letter-spacing:.5px;opacity:0;transform:translateY(8px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}.connection-status.visible{opacity:.95;transform:translateY(0)}.connection-status.offline{background:#7f1d1d}
-.chess-toast{position:fixed;left:50%;bottom:22px;z-index:6000;max-width:min(90vw,420px);padding:10px 14px;border-radius:8px;background:#111827;color:#fff;font:600 12px/1.4 system-ui,sans-serif;text-align:center;opacity:0;transform:translate(-50%,12px);pointer-events:none;transition:opacity .2s ease,transform .2s ease}.chess-toast.visible{opacity:.97;transform:translate(-50%,0)}
-html[data-theme="dark"] body{background:#0f1115;color:#f3f4f6}
-html[data-theme="dark"] .feature-item,html[data-theme="dark"] .game-settings,html[data-theme="dark"] .player-bar,html[data-theme="dark"] .game-status,html[data-theme="dark"] .game-panel,html[data-theme="dark"] .academy-progress,html[data-theme="dark"] .lesson-card,html[data-theme="dark"] .modal-content{background:#171a21;border-color:#2d333d;color:#f3f4f6}
-html[data-theme="dark"] .secondary-button{background:#20242c;color:#f3f4f6;border-color:#3b424e}html[data-theme="dark"] .secondary-button:hover{background:#2a303a}
-html[data-theme="dark"] .outline-button{color:#f3f4f6;border-color:#5b6472}
-html[data-theme="dark"] .setting-group select{background:#11151b;color:#f3f4f6;border-color:#3b424e}
-html[data-theme="dark"] .panel-section,html[data-theme="dark"] .game-controls{border-color:#2d333d}
-html[data-theme="dark"] .panel-heading,html[data-theme="dark"] .page-subtitle,html[data-theme="dark"] .feature-item p,html[data-theme="dark"] .lesson-card p{color:#aeb6c2}
-html[data-theme="dark"] .stat-item,html[data-theme="dark"] .feature-icon,html[data-theme="dark"] .player-piece-icon{background:#222731}
-html[data-theme="dark"] .move-row{border-color:#2d333d}html[data-theme="dark"] .empty-history{color:#7f8997}html[data-theme="dark"] .progress-track{background:#303641}html[data-theme="dark"] .modal-actions{border-color:#2d333d}
-@media(max-width:760px){.theme-toggle{padding:0 8px;font-size:9px;margin-right:4px}.connection-status{bottom:10px;right:10px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* V2 utility controls */
+.utility-button{min-height:34px;padding:0 10px;margin-right:6px;border:1px solid #777;border-radius:5px;background:transparent;color:#fff;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.utility-button:hover{background:#303030;border-color:#aaa}
+.utility-button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+html[data-theme="dark"] .utility-button{border-color:#4b5563;color:#f3f4f6}
+html[data-theme="dark"] .utility-button:hover{background:#252b35}
+html[data-theme="dark"] .game-status,html[data-theme="dark"] .game-panel,html[data-theme="dark"] .academy-progress,html[data-theme="dark"] .lesson-card{box-shadow:0 10px 30px rgba(0,0,0,.18)}
+@media(max-width:760px){.utility-button{padding:0 7px;font-size:8px;margin-right:3px}}
+@media(max-width:430px){.utility-button{min-height:30px;font-size:8px}.header-right{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}}
